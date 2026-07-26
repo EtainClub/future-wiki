@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /wiki_snapshot/{pageId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /meta/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /qa_cache/{hash} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /derived/{document} {
+      allow read, write: if isAdmin();
+    }
+    match /review_queue/{document} {
+      allow read, write: if isAdmin();
+    }
+    match /sources_meta/{document} {
+      allow read, write: if isAdmin();
+    }
+    match /rate_limits/{document} {
+      allow read, write: if false;
+    }
+  }
+}

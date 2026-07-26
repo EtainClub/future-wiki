@@ -1,0 +1,26 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 20
+  concurrency: 40
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: ANTHROPIC_API_KEY
+    secret: anthropic-api-key
+  - variable: GITHUB_APP_ID
+    secret: github-app-id
+  - variable: GITHUB_APP_PRIVATE_KEY
+    secret: github-app-private-key
+  - variable: GITHUB_APP_INSTALLATION_ID
+    secret: github-app-installation-id
+  - variable: GITHUB_REPOSITORY
+    secret: github-repository
+  - variable: GITHUB_WEBHOOK_SECRET
+    secret: github-webhook-secret
+  - variable: FIREBASE_STORAGE_BUCKET
+    secret: firebase-storage-bucket
+  - variable: REQUIRE_APP_CHECK
+    value: "true"
+    availability:
+      - RUNTIME
