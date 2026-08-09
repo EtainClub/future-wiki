@@ -48,10 +48,12 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # App Check 등록 후 reCAPTCHA Enterprise 사이트 키를 채운다. 비어 있으면
-  # getAppCheckToken()이 null을 반환하고, 프로덕션의 verifyAppCheck가 /api/ask를 401로 막는다.
-  - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
-    value: ""
-    availability:
-      - BUILD
-      - RUNTIME
+  # App Check 등록 후 아래 항목을 실제 사이트 키로 되살린다.
+  # value: "" 는 App Hosting 검증기가 "값 없음"으로 보고 빌드를 거부하므로 넣지 않는다.
+  # 변수가 없으면 getAppCheckToken()이 null을 반환하고, 프로덕션의 verifyAppCheck가
+  # /api/ask를 401로 막는다 — 키를 채우기 전까지 질문 기능은 동작하지 않는다.
+  # - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+  #   value: "<reCAPTCHA Enterprise 사이트 키>"
+  #   availability:
+  #     - BUILD
+  #     - RUNTIME
