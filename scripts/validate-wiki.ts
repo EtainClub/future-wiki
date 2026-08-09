@@ -40,10 +40,12 @@ for (const file of wikiFiles) {
 
     const claims = parsed.content.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#") && !line.startsWith(">") && !line.startsWith("-") && !line.startsWith("[src:"));
     for (const claim of claims) {
-      if (!/\[src: raw\/.+#L\d+(?:-L\d+)?\]$/.test(claim)) errors.push(`${relative}: claim lacks trailing source anchor: ${claim.slice(0, 50)}`);
+      // 경로는 non-greedy로 잡는다. `.+` 를 쓰면 한 줄에 앵커가 2개 이상일 때 둘을 하나로 삼켜
+      // 존재하지 않는 경로를 만들어낸다. 앵커 뒤 문장부호는 허용한다.
+      if (!/\[src: raw\/[^#\s\]]+#L\d+(?:-L\d+)?\][.,;:)\s]*$/.test(claim)) errors.push(`${relative}: claim lacks trailing source anchor: ${claim.slice(0, 50)}`);
     }
 
-    const anchors = [...new Set([...meta.sources, ...Array.from(parsed.content.matchAll(/\[src: (raw\/.+#L\d+(?:-L\d+)?)\]/g), (match) => match[1])])];
+    const anchors = [...new Set([...meta.sources, ...Array.from(parsed.content.matchAll(/\[src: (raw\/[^#\s\]]+#L\d+(?:-L\d+)?)\]/g), (match) => match[1])])];
     for (const anchor of anchors) {
       const match = anchor.match(/^(raw\/.+)#L(\d+)(?:-L(\d+))?$/);
       if (!match) { errors.push(`${relative}: invalid anchor ${anchor}`); continue; }

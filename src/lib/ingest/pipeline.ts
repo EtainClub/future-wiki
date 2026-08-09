@@ -12,6 +12,21 @@ import { readWikiIndex } from "../wiki/repository";
 import { prophetLensIds } from "../wiki/lenses";
 import { pageTypes, wikiFrontmatterSchema } from "../wiki/schema";
 
+/**
+ * 초안에 담을 예언 기록 필드.
+ *
+ * recorded / targetPeriod 만 모델이 채운다. actualEvent·verdict·interpreted* 는
+ * 원문이 아니라 후대 해석사에 관한 주장이라 raw/ 에 앵커할 근거가 없다.
+ * 모델이 기억으로 채우면 이 프로젝트가 폭로하려는 "사후 귀속"을 도구가 저지르는 셈이므로
+ * 사람이 검토 단계에서 채우도록 비워 둔다.
+ */
+const draftProphecySchema = z.object({
+  // 저자가 예언을 기록한 시점. 업로드 파일이 근대 교정본이면 인제스트는 이를 알 수 없으므로
+  // null을 허용하고 사람이 채운다. 판본 연도를 여기에 넣으면 기록 시점이 왜곡된다.
+  recorded: z.string().nullable().default(null),
+  targetPeriod: z.string().nullable().default(null),
+});
+
 const draftSchema = z.object({
   pages: z.array(z.object({
     type: z.enum(pageTypes),
@@ -21,6 +36,8 @@ const draftSchema = z.object({
     lens: z.array(z.enum(prophetLensIds)).min(1),
     confidence: z.enum(["high", "medium", "low"]),
     body: z.string(),
+    // 모델이 prediction이 아닌 페이지에 null을 넣는 경우가 있어 null도 받는다.
+    prophecy: draftProphecySchema.nullish(),
   })).min(1).max(8),
   summary: z.string(),
 });
@@ -74,14 +91,34 @@ function sourceChunks(text: string, maxCharacters = 40_000): SourceChunk[] {
   return chunks;
 }
 
-function validateChunkAnchors(draft: z.infer<typeof draftSchema>, rawPath: string, chunk: SourceChunk): void {
+/**
+ * 파일 상단의 `#` 주석 블록은 우리가 붙인 메타데이터이지 원문이 아니다.
+ * 여기를 인용하면 판본 정보나 파일 포맷 설명이 예언 원문처럼 인용된다.
+ */
+function metadataLineCount(text: string): number {
+  let count = 0;
+  for (const line of text.split("\n")) {
+    if (line.startsWith("#") || line.trim() === "") count += 1;
+    else break;
+  }
+  return count;
+}
+
+function validateChunkAnchors(draft: z.infer<typeof draftSchema>, rawPath: string, chunk: SourceChunk, metadataLines: number): void {
   const escapedPath = rawPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const anchorPattern = new RegExp(`\\[src: ${escapedPath}#L(\\d+)(?:-L(\\d+))?\\]`, "g");
   for (const page of draft.pages) {
     const anchors = [...page.body.matchAll(anchorPattern)];
-    if (!anchors.length) throw new Error("DRAFT_MISSING_SOURCE_ANCHOR");
-    if (anchors.some((match) => Number(match[1]) < chunk.startLine || Number(match[2] ?? match[1]) > chunk.endLine)) {
-      throw new Error("DRAFT_SOURCE_ANCHOR_OUT_OF_RANGE");
+    // 어느 페이지가 문제인지 알아야 검토자가 고칠 수 있다.
+    if (!anchors.length) throw new Error(`DRAFT_MISSING_SOURCE_ANCHOR: ${page.type}/${page.id}`);
+    const outOfRange = anchors.find((match) => Number(match[1]) < chunk.startLine || Number(match[2] ?? match[1]) > chunk.endLine);
+    if (outOfRange) {
+      throw new Error(`DRAFT_SOURCE_ANCHOR_OUT_OF_RANGE: ${page.type}/${page.id} -> ${outOfRange[0]} (허용 ${chunk.startLine}-${chunk.endLine})`);
+    }
+    // 앵커 범위가 통째로 메타데이터 안에 있으면 원문을 인용한 것이 아니다.
+    const citesMetadata = anchors.find((match) => Number(match[2] ?? match[1]) <= metadataLines);
+    if (citesMetadata) {
+      throw new Error(`DRAFT_ANCHOR_CITES_METADATA: ${page.type}/${page.id} -> ${citesMetadata[0]} (1-${metadataLines}행은 메타데이터)`);
     }
   }
 }
@@ -101,6 +138,7 @@ function mergeDrafts(results: Array<z.infer<typeof draftSchema>>): z.infer<typeo
         lens: [...new Set([...current.lens, ...page.lens])],
         confidence: confidenceRank[page.confidence] > confidenceRank[current.confidence] ? page.confidence : current.confidence,
         body: `${current.body.trim()}\n\n${page.body.trim()}`,
+        prophecy: current.prophecy ?? page.prophecy,
       });
     }
   }
@@ -130,6 +168,7 @@ async function draftPages(text: string, input: SourceInput, rawPath: string) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const index = await readWikiIndex();
   const results: Array<z.infer<typeof draftSchema>> = [];
+  const metadataLines = metadataLineCount(text);
   for (const chunk of sourceChunks(text)) {
     const numberedText = chunk.text.split("\n").map((line, index) => `${chunk.startLine + index}: ${line}`).join("\n");
     const response = await client.messages.create({
@@ -137,13 +176,13 @@ async function draftPages(text: string, input: SourceInput, rawPath: string) {
       // adaptive thinking이 max_tokens를 함께 쓰므로 초안 JSON이 잘리지 않도록 여유를 둔다.
       max_tokens: 16000,
       output_config: { effort: "medium" },
-      system: `당신은 근거 중심 Wiki 편집자다. 원문에서 인물·원리·예측·대상·주제를 추출하고 기존 인덱스와 대조해 신규 페이지 또는 기존 pageId 보강 초안을 만든다. 모든 사실 문장은 [src: ${rawPath}#Lx-Ly]로 끝내고, 추론은 반드시 > ⚠ 가정: 블록에만 쓴다. JSON만 반환: {summary,pages:[{type,id,title,description,lens,confidence,body}]}. 이 청크에서 허용되는 line 범위는 ${chunk.startLine}-${chunk.endLine}이다.\n필드 타입을 정확히 지켜라. pages는 1~8개 배열이다.\n- type: ${pageTypes.map((value) => JSON.stringify(value)).join(" | ")} 중 하나(문자열)\n- id: 소문자·숫자·하이픈만 쓰는 kebab-case 문자열 (예: "water-food")\n- title, description, body: 문자열\n- lens: 반드시 배열이다. [${prophetLensIds.map((value) => JSON.stringify(value)).join(" | ")}] 중 최소 1개. 문자열 하나만 쓰지 말고 ["iching"]처럼 배열로 감싸라.\n- confidence: "high" | "medium" | "low" 중 하나(문자열)\n- summary: 문자열`,
+      system: `당신은 근거 중심 Wiki 편집자다. 원문에서 인물·원리·예측·대상·주제를 추출하고 기존 인덱스와 대조해 신규 페이지 또는 기존 pageId 보강 초안을 만든다. 추론은 반드시 > ⚠ 가정: 블록에만 쓴다. JSON만 반환: {summary,pages:[{type,id,title,description,lens,confidence,body,prophecy?}]}. 이 청크에서 허용되는 line 범위는 ${chunk.startLine}-${chunk.endLine}이다.\nbody 작성 규칙: 사실 문장은 한 줄에 하나씩 쓰고, 그 줄은 반드시 [src: ${rawPath}#Lx-Ly] 앵커로 끝낸다. 한 줄에 문장을 여러 개 이어 쓰거나 앵커 뒤에 다른 문장을 붙이지 마라.\n인용 금지 구간: 1-${metadataLines}행은 파일 상단의 메타데이터 주석이며 원문이 아니다. 판본·파일 구조 설명을 원문처럼 인용하지 마라.\n필드 타입을 정확히 지켜라. pages는 1~8개 배열이다.\n- type: ${pageTypes.map((value) => JSON.stringify(value)).join(" | ")} 중 하나(문자열)\n- id: 소문자·숫자·하이픈만 쓰는 kebab-case 문자열 (예: "water-food")\n- title, description, body: 문자열\n- lens: 반드시 배열이다. [${prophetLensIds.map((value) => JSON.stringify(value)).join(" | ")}] 중 최소 1개. 문자열 하나만 쓰지 말고 ["iching"]처럼 배열로 감싸라.\n- confidence: "high" | "medium" | "low" 중 하나(문자열)\n- summary: 문자열\n\n예언 기록(type: "prediction")은 선별해서 만든다. 원문 전체를 훑어 페이지를 만들지 말고, 시점·대상·사건이 텍스트 안에서 비교적 특정되는 대목만 골라 최대 4건까지 만든다. 나머지는 원문으로만 두고 페이지를 만들지 않는다.\ntype이 "prediction"인 페이지에는 prophecy 객체를 넣는다:\n- prophecy.recorded: 저자가 이 예언을 기록한 시점. 원문 본문에 명시된 경우에만 쓴다. 업로드된 파일이 후대 교정본이면 그 판본 연도는 기록 시점이 아니므로 절대 쓰지 말고 null을 넣는다.\n- prophecy.targetPeriod: 예언이 가리키는 시기. 원문에 연도·기간이 명시된 경우에만 쓰고, 없으면 null.\nprophecy에 다른 키를 넣지 마라. 실제 사건 대응·적중 여부·후대 해석 존재 여부는 원문에 없는 정보이므로 절대 추측해서 쓰지 않는다. 그 판단은 사람이 검토 단계에서 채운다.`,
       messages: [{ role: "user", content: `기존 인덱스:\n${index}\n\n출처: ${input.title}\n원문 전체 범위: 1-${lineCount}\n현재 청크: ${chunk.startLine}-${chunk.endLine}\n각 행 앞의 숫자는 실제 원문 줄 번호이며 인용 앵커에 그대로 사용해야 한다.\n\n${numberedText}` }],
     });
     const raw = response.content.filter((block): block is Anthropic.Messages.TextBlock => block.type === "text").map((block) => block.text).join("\n");
     const json = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] ?? raw;
     const parsed = draftSchema.parse(JSON.parse(json));
-    validateChunkAnchors(parsed, rawPath, chunk);
+    validateChunkAnchors(parsed, rawPath, chunk, metadataLines);
     results.push(parsed);
   }
   return mergeDrafts(results);
@@ -179,7 +218,11 @@ function wikiContent(page: DraftPage, rawPath: string, lineCount: number, existi
     confidence = confidenceRank[metadata.confidence] > confidenceRank[page.confidence] ? metadata.confidence : page.confidence;
     body = `${existing.content.trim()}\n\n## ${today} 인제스트 보강\n\n${body}`;
   }
-  return `---\ntype: ${type}\nid: ${page.id}\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\nlens: [${lens.join(", ")}]\nsources: [${sources.join(", ")}]\nconfidence: ${confidence}\nupdated: ${today}\n---\n\n${body}\n`;
+  // 검증 필드는 원문에서 확인되는 것만 채우고, 해석사에 속하는 값은 사람이 채우도록 비워 둔다.
+  const prophecyBlock = page.prophecy
+    ? `prophecy:\n  recorded: ${page.prophecy.recorded === null || page.prophecy.recorded === undefined ? "null" : JSON.stringify(page.prophecy.recorded)}\n  targetPeriod: ${page.prophecy.targetPeriod === null || page.prophecy.targetPeriod === undefined ? "null" : JSON.stringify(page.prophecy.targetPeriod)}\n  actualEvent: null\n  interpretedBefore: false\n  interpretedAfter: false\n  verdict: unresolved\n`
+    : "";
+  return `---\ntype: ${type}\nid: ${page.id}\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\nlens: [${lens.join(", ")}]\nsources: [${sources.join(", ")}]\nconfidence: ${confidence}\nupdated: ${today}\n${prophecyBlock}---\n\n${body}\n`;
 }
 
 async function createPullRequest(rawPath: string, text: string, draft: Awaited<ReturnType<typeof draftPages>>, input: SourceInput) {
@@ -214,7 +257,17 @@ async function createPullRequest(rawPath: string, text: string, draft: Awaited<R
 
   const metaPath = rawPath.replace(/\/[^/]+$/, "/_meta.yaml");
   const collected = new Date().toISOString();
-  const metaContent = `sourceId: ${input.sourceId}\ntitle: ${JSON.stringify(input.title)}\ncopyright: ${input.copyright}\noriginalFilename: ${JSON.stringify(input.file.name)}\ncollectedAt: ${collected}\n`;
+  // 키는 rawMetaSchema(snake_case)를 따른다. camelCase로 쓰면 validate:wiki가 실패해 CI가 막힌다.
+  // 출처 성격 필드(lens/method/record_reliability/canonical_edition)는 사람이 검토 단계에서 채운다.
+  const metaContent = [
+    `source_id: ${input.sourceId}`,
+    `title: ${JSON.stringify(input.title)}`,
+    `copyright: ${input.copyright}`,
+    `collected_at: ${collected}`,
+    `review_status: needs-source-metadata`,
+    `notice: ${JSON.stringify(`원본 파일명 ${input.file.name}. 인제스트가 생성했으며 lens·method·record_reliability·canonical_edition을 사람이 채워야 한다.`)}`,
+    "",
+  ].join("\n");
   const [existingRaw, existingMeta, wikiFiles] = await Promise.all([
     existingFile(rawPath),
     existingFile(metaPath),

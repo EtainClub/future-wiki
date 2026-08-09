@@ -25,8 +25,11 @@ export type Lens = LensId;
  * _meta.yaml의 recordReliability는 "사건 전에 실제로 기록됐는가" — 세 축은 서로 독립이다.
  */
 export const prophecySchema = z.object({
-  /** 예언이 기록·출판된 시점. 위키 편집일(updated)과 다르다. */
-  recorded: z.string().min(1),
+  /**
+   * 저자가 예언을 기록한 시점. 위키 편집일(updated)이나 판본 연도와 다르다.
+   * 후대 교정본으로 인제스트하면 자동으로는 알 수 없으므로 null을 허용하고 사람이 채운다.
+   */
+  recorded: z.string().min(1).nullable().default(null),
   /** 예언이 가리키는 시기. 특정할 수 없으면 null. */
   targetPeriod: z.string().nullable().default(null),
   /** 대응한다고 거론되는 실제 사건. 없으면 null. */
