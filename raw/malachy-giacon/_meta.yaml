@@ -1,0 +1,20 @@
+source_id: malachy-giacon
+title: Prophetia S. Malachiæ — 교황 지목·영역·해설 (후대 부가)
+copyright: public-domain
+collected_at: 2026-08-09
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  예언 본문이 아니다. 표어에 교황을 대응시킨 지목과 후대 해설이며,
+  사후 해석의 사례로만 인용한다. 표어 본문은 raw/malachy/ 에 있다.
+lens: malachy
+method: posthumous-attribution
+record_reliability: D
+canonical_edition: >-
+  Wion, Lignum Vitæ (1595)의 Giacon 지목에 M. J. O'Brien (1880)의 영역과 해설을 더한 것.
+attribution_note: >-
+  Wion이 직접 밝힌 바에 따르면 교황 이름을 붙인 것은 Alphonsus Giacon이다.
+  1595년 간행 시점에 이미 재위를 마친 교황들에 대한 대응이므로 예언의 적중이 아니라
+  사후 지목이다. O'Brien(1880)은 이 대응이 Onuphrius Panvinius의 1557년 교황 약사와
+  지나치게 일치한다는 점을 들어 위작 가능성을 논증했으며, 그의 해설도 함께 담겨 있다.
+  이 자료는 prophecy.interpretedAfter의 근거로만 쓰고, 예언이 사건을 맞혔다는 근거로
+  사용해서는 안 된다.

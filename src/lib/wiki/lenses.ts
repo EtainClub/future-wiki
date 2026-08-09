@@ -86,6 +86,26 @@ export const LENS_REGISTRY = [
     recordReliability: "C",
     region: "중국",
   },
+  {
+    // 유기(1311-1375) 귀속이나 청 말 황제까지 언급하므로 현전 형태는 후대 성립이다.
+    id: "liubowen",
+    label: "유백온",
+    short: "왕조 흥망을 문답으로 읽는 관점",
+    method: "dynastic-cycle",
+    recordReliability: "C",
+    lifespan: "1311-1375",
+    region: "중국",
+  },
+  {
+    // 말라키(1094-1148) 귀속이나 텍스트는 1595년에야 처음 나타난다. 약 450년의 공백이 있다.
+    id: "malachy",
+    label: "성 말라키",
+    short: "교황 계승을 표어로 읽는 관점",
+    method: "posthumous-attribution",
+    recordReliability: "D",
+    lifespan: "1094-1148",
+    region: "아일랜드",
+  },
 ] as const satisfies readonly LensDefinition[];
 
 export type ProphetLens = (typeof LENS_REGISTRY)[number]["id"];

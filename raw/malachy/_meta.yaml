@@ -1,0 +1,25 @@
+source_id: malachy
+title: Prophetia S. Malachiæ — 라틴어 표어 (예언 본문)
+copyright: public-domain
+collected_at: 2026-08-09
+review_status: machine-extracted-needs-reconciliation
+notice: >-
+  라틴어 표어만 포함한다. 교황 지목·영역·해설은 raw/malachy-giacon/ 으로 분리했다.
+lens: malachy
+method: posthumous-attribution
+record_reliability: D
+canonical_edition: >-
+  Arnold Wion, Lignum Vitæ (Venice, 1595) 소재. M. J. O'Brien, An Historical and
+  Critical Account of the So-called Prophecy of St. Malachy (Dublin, 1880)의 번호 목록에서
+  en.wikisource 전사본을 통해 기계 추출.
+attribution_note: >-
+  말라키(1094-1148)에게 귀속되지만 텍스트는 1595년 Wion의 간행으로 처음 나타난다.
+  귀속 시점과 텍스트 확인 시점 사이에 약 450년의 공백이 있어 기록 신뢰도를 D로 둔다.
+  Wion 본인이 라틴어 주기로 "교황에 관해 덧붙여진 것은 말라키가 아니라 Giacon 신부의
+  것"이라 밝혔다. 즉 출처 스스로 표어와 교황 지목의 층위가 다름을 문서화하고 있다.
+  1595년 이전 교황에 대한 대응은 전부 사후 지목이므로, 이 자료를 쓰는 위키 페이지는
+  prophecy.interpretedAfter를 true로 두어야 한다.
+  추출 결과 111개이며 통용 정본 112개와 1개 차이가 난다. 저본 번호에도 불일치가 있어
+  42번째 항목의 번호가 XLI로 찍혀 있고 그 이후 88번째부터 다시 1씩 밀린다.
+  표어 라벨은 우리 순번이 아니라 저본에 인쇄된 로마숫자를 그대로 썼다. 인용 시 저본과
+  대조가 필요하며, 누락 1건의 위치는 사람이 확인해야 한다.

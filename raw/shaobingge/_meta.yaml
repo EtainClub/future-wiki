@@ -1,0 +1,20 @@
+source_id: shaobingge
+title: 燒餅歌 — 본문 (협주 제외)
+copyright: public-domain
+collected_at: 2026-08-09
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  한문 원문 그대로이며 번역을 포함하지 않는다. 본문에 박혀 있던 〈…〉 협주는
+  raw/shaobingge-glosses/ 로 분리했다.
+lens: liubowen
+method: dynastic-cycle
+record_reliability: C
+canonical_edition: >-
+  zh.wikisource 전사본(교정률 75% 표시). 명확한 저본 판본 표기가 없어
+  1차 사료와의 대조가 필요하다.
+attribution_note: >-
+  명 개국공신 유기(劉基, 1311-1375)에게 귀속되지만, 유기 생전 저작으로 확인되지 않는다.
+  명 태조와의 문답 형식이며 청대 황제들(順治·康熙·雍正·乾隆·嘉慶·道光·咸豐·同治·光緒)까지
+  차례로 언급하므로, 최소한 현전 형태는 청 말 이후에 성립한 것으로 보아야 한다.
+  학계에서도 유백온 귀속 예언서가 후대에 어떻게 형성·변형됐는지가 연구 대상이다.
+  기록 신뢰도를 C로 둔다.
