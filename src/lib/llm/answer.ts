@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { pageAllowedForLens } from "../wiki/local";
 import { listRepositoryPages, readWikiIndex, readWikiPage, readWikiRaw } from "../wiki/repository";
-import { answerPayloadSchema, lensSchema, type AnswerPayload, type Lens } from "../wiki/schema";
+import { answerPayloadSchema, lensSchema, lensValues, type AnswerPayload, type Lens } from "../wiki/schema";
 
 const normalizedSchema = z.object({ normalized: z.string().min(1), entities: z.array(z.string()).default([]), topic: z.array(z.string()).default([]), timeScope: z.string().nullable().default(null), lens: lensSchema });
 const answerSchema = answerPayloadSchema.omit({ id: true, question: true, lens: true, cached: true });
@@ -29,7 +29,7 @@ export async function normalizeQuestion(question: string, lens: Lens): Promise<N
   }
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await client.messages.create({
-    model: process.env.ANTHROPIC_HAIKU_MODEL ?? "claude-3-5-haiku-latest",
+    model: process.env.ANTHROPIC_HAIKU_MODEL ?? "claude-haiku-4-5",
     max_tokens: 400,
     system: "질문의 의미를 보존해 검색용 구조로 정규화하세요. UI에서 지정한 lens는 바꾸지 마세요. JSON만 반환: {\"normalized\":\"...\",\"entities\":[],\"topic\":[],\"timeScope\":null,\"lens\":\"all\"}",
     messages: [{ role: "user", content: `UI 렌즈: ${lens}\n질문: ${question}` }],
@@ -69,7 +69,7 @@ export async function buildLocalAnswer(question: string, lens: Lens): Promise<An
 
 async function systemRules(lens: Lens): Promise<string> {
   const agents = await fs.readFile(path.join(process.cwd(), "AGENTS.md"), "utf8");
-  return `${agents}\n\n렌즈 제약: ${lens}. all이 아니면 해당 lens 태그 페이지 외에는 근거로 사용할 수 없다.\n모든 근거는 실제 read_page 결과에 있는 pageId만 사용한다. 추론은 assumptions에만 넣는다. 예언을 사실로 단정하지 않는다.\n최종 응답은 JSON만 반환한다: {prediction, evidence:[{pageId,title,detail}], assumptions, confidence, confidenceReason, suggestedLenses}.`;
+  return `${agents}\n\n렌즈 제약: ${lens}. all이 아니면 해당 lens 태그 페이지 외에는 근거로 사용할 수 없다.\n모든 근거는 실제 read_page 결과에 있는 pageId만 사용한다. 추론은 assumptions에만 넣는다. 예언을 사실로 단정하지 않는다.\n최종 응답은 JSON만 반환한다: {prediction, evidence:[{pageId,title,detail}], assumptions, confidence, confidenceReason, suggestedLenses}.\n스키마를 정확히 지켜라. evidence는 read_page로 실제 읽은 페이지로 최소 1건 채운다. 해당 렌즈에 쓸 만한 페이지가 없으면, 읽은 페이지를 근거로 남기고 prediction과 confidenceReason에 근거가 부족하다는 사실을 적어라 — 빈 배열을 반환하지 마라.\nconfidence는 "high" | "medium" | "low" 중 하나여야 한다. 다른 값이나 서술형 표현은 금지한다.\nsuggestedLenses는 ${JSON.stringify(lensValues)} 안의 값만 담은 배열이다. 렌즈 이름 외의 문구를 넣지 마라.`;
 }
 
 export async function runAnswer(question: string, lens: Lens, normalized: NormalizedQuestion, report: ProgressReporter): Promise<AnswerPayload> {
@@ -117,8 +117,10 @@ export async function runAnswer(question: string, lens: Lens, normalized: Normal
 
   for (let turn = 0; turn < 8; turn += 1) {
     const response = await client.messages.create({
-      model: process.env.ANTHROPIC_SONNET_MODEL ?? "claude-sonnet-4-20250514",
-      max_tokens: 2400,
+      model: process.env.ANTHROPIC_SONNET_MODEL ?? "claude-sonnet-5",
+      // Sonnet 5는 thinking 생략 시 adaptive가 켜지고 max_tokens를 thinking과 나눠 쓴다.
+      max_tokens: 8000,
+      output_config: { effort: "medium" },
       system: rules,
       tools,
       messages,

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "validate:wiki": "tsx scripts/validate-wiki.ts",
-    "sync:wiki": "tsx scripts/sync-wiki.ts",
+    "sync:wiki": "tsx --env-file-if-exists=.env.local scripts/sync-wiki.ts",
+    "set:admin": "tsx --env-file-if-exists=.env.local scripts/set-admin-claim.ts",
     "test:golden": "tsx --test tests/golden.test.ts",
     "test:unit": "tsx --test tests/*.test.ts",
     "test": "npm run validate:wiki && npm run test:unit"

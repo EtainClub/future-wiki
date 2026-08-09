@@ -132,8 +132,10 @@ async function draftPages(text: string, input: SourceInput, rawPath: string) {
   for (const chunk of sourceChunks(text)) {
     const numberedText = chunk.text.split("\n").map((line, index) => `${chunk.startLine + index}: ${line}`).join("\n");
     const response = await client.messages.create({
-      model: process.env.ANTHROPIC_SONNET_MODEL ?? "claude-sonnet-4-20250514",
-      max_tokens: 5000,
+      model: process.env.ANTHROPIC_SONNET_MODEL ?? "claude-sonnet-5",
+      // adaptive thinking이 max_tokens를 함께 쓰므로 초안 JSON이 잘리지 않도록 여유를 둔다.
+      max_tokens: 16000,
+      output_config: { effort: "medium" },
       system: `당신은 근거 중심 Wiki 편집자다. 원문에서 인물·원리·예측·대상·주제를 추출하고 기존 인덱스와 대조해 신규 페이지 또는 기존 pageId 보강 초안을 만든다. 모든 사실 문장은 [src: ${rawPath}#Lx-Ly]로 끝내고, 추론은 반드시 > ⚠ 가정: 블록에만 쓴다. JSON만 반환: {summary,pages:[{type,id,title,description,lens,confidence,body}]}. 이 청크에서 허용되는 line 범위는 ${chunk.startLine}-${chunk.endLine}이다.`,
       messages: [{ role: "user", content: `기존 인덱스:\n${index}\n\n출처: ${input.title}\n원문 전체 범위: 1-${lineCount}\n현재 청크: ${chunk.startLine}-${chunk.endLine}\n각 행 앞의 숫자는 실제 원문 줄 번호이며 인용 앵커에 그대로 사용해야 한다.\n\n${numberedText}` }],
     });
