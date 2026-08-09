@@ -4,3 +4,10 @@ copyright: excerpt
 collected_at: 2026-07-26
 review_status: needs-primary-source-review
 notice: 직접 인용이 아닌 구조 검증용 편집 요약이며 공개 전 원전 대조가 필요합니다.
+lens: jeongyeok
+method: cosmic-cycle
+record_reliability: D
+canonical_edition: 없음 — 실제 원전 미대조 시드
+attribution_note: >-
+  김항(1826-1898) 《정역》 원문이 아니라 MVP 구조 검증용 편집 요약이다. 원전은 저작권이
+  소멸했으므로 확보 후 교체하면 기록 신뢰도 A가 된다.

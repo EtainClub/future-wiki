@@ -9,15 +9,16 @@ import { z } from "zod";
 import { getAdminServices } from "../firebase/admin";
 import { getInstallationOctokit, githubRepository } from "../github/client";
 import { readWikiIndex } from "../wiki/repository";
-import { wikiFrontmatterSchema } from "../wiki/schema";
+import { prophetLensIds } from "../wiki/lenses";
+import { pageTypes, wikiFrontmatterSchema } from "../wiki/schema";
 
 const draftSchema = z.object({
   pages: z.array(z.object({
-    type: z.enum(["prophet", "principle", "prediction", "entity", "topic", "synthesis"]),
+    type: z.enum(pageTypes),
     id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     title: z.string(),
     description: z.string(),
-    lens: z.array(z.enum(["tanheo", "iching", "jeongyeok", "nostradamus"])).min(1),
+    lens: z.array(z.enum(prophetLensIds)).min(1),
     confidence: z.enum(["high", "medium", "low"]),
     body: z.string(),
   })).min(1).max(8),
@@ -136,7 +137,7 @@ async function draftPages(text: string, input: SourceInput, rawPath: string) {
       // adaptive thinking이 max_tokens를 함께 쓰므로 초안 JSON이 잘리지 않도록 여유를 둔다.
       max_tokens: 16000,
       output_config: { effort: "medium" },
-      system: `당신은 근거 중심 Wiki 편집자다. 원문에서 인물·원리·예측·대상·주제를 추출하고 기존 인덱스와 대조해 신규 페이지 또는 기존 pageId 보강 초안을 만든다. 모든 사실 문장은 [src: ${rawPath}#Lx-Ly]로 끝내고, 추론은 반드시 > ⚠ 가정: 블록에만 쓴다. JSON만 반환: {summary,pages:[{type,id,title,description,lens,confidence,body}]}. 이 청크에서 허용되는 line 범위는 ${chunk.startLine}-${chunk.endLine}이다.\n필드 타입을 정확히 지켜라. pages는 1~8개 배열이다.\n- type: "prophet" | "principle" | "prediction" | "entity" | "topic" | "synthesis" 중 하나(문자열)\n- id: 소문자·숫자·하이픈만 쓰는 kebab-case 문자열 (예: "water-food")\n- title, description, body: 문자열\n- lens: 반드시 배열이다. ["tanheo" | "iching" | "jeongyeok" | "nostradamus"] 중 최소 1개. 문자열 하나만 쓰지 말고 ["iching"]처럼 배열로 감싸라.\n- confidence: "high" | "medium" | "low" 중 하나(문자열)\n- summary: 문자열`,
+      system: `당신은 근거 중심 Wiki 편집자다. 원문에서 인물·원리·예측·대상·주제를 추출하고 기존 인덱스와 대조해 신규 페이지 또는 기존 pageId 보강 초안을 만든다. 모든 사실 문장은 [src: ${rawPath}#Lx-Ly]로 끝내고, 추론은 반드시 > ⚠ 가정: 블록에만 쓴다. JSON만 반환: {summary,pages:[{type,id,title,description,lens,confidence,body}]}. 이 청크에서 허용되는 line 범위는 ${chunk.startLine}-${chunk.endLine}이다.\n필드 타입을 정확히 지켜라. pages는 1~8개 배열이다.\n- type: ${pageTypes.map((value) => JSON.stringify(value)).join(" | ")} 중 하나(문자열)\n- id: 소문자·숫자·하이픈만 쓰는 kebab-case 문자열 (예: "water-food")\n- title, description, body: 문자열\n- lens: 반드시 배열이다. [${prophetLensIds.map((value) => JSON.stringify(value)).join(" | ")}] 중 최소 1개. 문자열 하나만 쓰지 말고 ["iching"]처럼 배열로 감싸라.\n- confidence: "high" | "medium" | "low" 중 하나(문자열)\n- summary: 문자열`,
       messages: [{ role: "user", content: `기존 인덱스:\n${index}\n\n출처: ${input.title}\n원문 전체 범위: 1-${lineCount}\n현재 청크: ${chunk.startLine}-${chunk.endLine}\n각 행 앞의 숫자는 실제 원문 줄 번호이며 인용 앵커에 그대로 사용해야 한다.\n\n${numberedText}` }],
     });
     const raw = response.content.filter((block): block is Anthropic.Messages.TextBlock => block.type === "text").map((block) => block.text).join("\n");

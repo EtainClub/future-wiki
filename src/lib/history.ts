@@ -1,8 +1,8 @@
-import type { Lens } from "./wiki/schema";
+import { lensValues, type Lens } from "./wiki/schema";
 
 export const HISTORY_KEY = "future-wiki-history:v1";
 export const LEGACY_HISTORY_KEY = "future-wiki-history";
-const VALID_LENSES = new Set<Lens>(["all", "tanheo", "iching", "jeongyeok", "nostradamus"]);
+const VALID_LENSES = new Set<Lens>(lensValues);
 
 export type HistoryItem = {
   id: string;

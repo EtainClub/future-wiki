@@ -1,11 +1,10 @@
+import { LENS_REGISTRY } from "./wiki/lenses";
 import type { Lens } from "./wiki/schema";
 
+/** UI 목록은 LENS_REGISTRY에서 파생된다. 예언가 추가는 lenses.ts만 고친다. */
 export const LENSES: Array<{ id: Lens; label: string; short: string }> = [
   { id: "all", label: "전체 지혜", short: "모든 체계를 함께 봅니다" },
-  { id: "tanheo", label: "탄허", short: "탄허의 사상과 시대 인식" },
-  { id: "iching", label: "주역", short: "변화의 구조와 괘의 원리" },
-  { id: "jeongyeok", label: "정역", short: "후천 전환과 순환의 관점" },
-  { id: "nostradamus", label: "노스트라다무스", short: "상징적 예언의 관점" },
+  ...LENS_REGISTRY.map((lens) => ({ id: lens.id as Lens, label: lens.label, short: lens.short })),
 ];
 
 export const EXAMPLE_QUESTIONS = [

@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { pageAllowedForLens } from "../wiki/local";
 import { listRepositoryPages, readWikiIndex, readWikiPage, readWikiRaw } from "../wiki/repository";
+import { prophetLensIds } from "../wiki/lenses";
 import { answerPayloadSchema, lensSchema, lensValues, type AnswerPayload, type Lens } from "../wiki/schema";
 
 const normalizedSchema = z.object({ normalized: z.string().min(1), entities: z.array(z.string()).default([]), topic: z.array(z.string()).default([]), timeScope: z.string().nullable().default(null), lens: lensSchema });
@@ -63,7 +64,7 @@ export async function buildLocalAnswer(question: string, lens: Lens): Promise<An
     assumptions: ["현재의 사회·기술 추세가 단기간에 완전히 단절되지 않는다고 가정했습니다.", "상징적 문헌을 사실 예측이 아닌 해석의 틀로 사용했습니다."],
     confidence: evidencePages.length >= 2 ? "medium" : "low",
     confidenceReason: evidencePages.length >= 2 ? "서로 다른 문헌 계열에서 공통된 변화의 구조를 확인했지만, 시점과 사건은 단정할 수 없습니다." : "선택한 렌즈에서 직접 연결되는 근거가 제한적입니다.",
-    suggestedLenses: (["tanheo", "iching", "jeongyeok"] as Lens[]).filter((item) => item !== lens).slice(0, 2),
+    suggestedLenses: (prophetLensIds as readonly Lens[]).filter((item) => item !== lens).slice(0, 2),
   };
 }
 
