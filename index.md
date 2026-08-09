@@ -11,3 +11,6 @@
 - [문명 전환의 공통 구조](wiki/syntheses/civilizational-transition.md) — 위기, 관계 조정, 새 질서의 형성 과정
 
 > 현재 문서는 MVP 구조 검증용 편집 메모를 사용합니다. 실제 원전 대조가 끝나기 전 직접 인용 자료로 사용하지 않습니다.
+- [노스트라다무스](wiki/prophets/nostradamus.md) — 16세기 프랑스 의사·점성가로, 4행시 형식의 예언집 『Les Prophéties』를 남긴 인물
+- [Les Prophéties, Centurie I (원문)](wiki/entities/centurie-i-text.md) — 노스트라다무스 예언집 중 첫 번째 100편의 4행시 모음, 위키 인용의 1차 출처 텍스트
+- [미해독 상징 4행시군](wiki/topics/ambiguous-quatrains.md) — 지명·동물·색채가 반복 등장하나 사건 대응이 불명확한 노스트라다무스 4행시들을 다루는 주제
