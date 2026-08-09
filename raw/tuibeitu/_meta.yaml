@@ -1,0 +1,22 @@
+source_id: tuibeitu
+title: 推背圖 — 讖曰·頌曰 (예언 본문)
+copyright: public-domain
+collected_at: 2026-08-09
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  한문 원문 그대로이며 번역을 포함하지 않는다. 해석은 wiki/ 페이지에서만 한다.
+  金聖歎 批註는 raw/tuibeitu-jinshengtan/ 에 분리해 두었다.
+lens: tuibeitu
+method: dynastic-cycle
+record_reliability: C
+canonical_edition: >-
+  金聖歎 批註本. 《中國預言七種》 清溪散人 編, 上海中華書局·文明書局, 1915년 간행.
+  zh.wikisource 전사본에서 기계 추출. 현전 판본이 14종 이상이며 象 수도 57·60·67로 갈린다.
+  이 파일은 그중 60象 유행본이다.
+attribution_note: >-
+  당(唐)의 이순풍(李淳風)·원천강(袁天罡)에게 귀속되지만, 현전 텍스트는 1915년에
+  간행된 금비본이고 서문조차 "壬戌年 여름에 한 초본을 얻었다"고만 밝힌다.
+  저자 귀속 시점(7세기)과 텍스트 확인 시점(20세기) 사이 간극이 1200년을 넘어
+  기록 신뢰도를 C로 둔다. 개별 象이 언제 성립했는지는 이 자료만으로 판정할 수 없다.
+  金聖歎 批註는 예언 본문이 아니라 후대 해석이므로 별도 출처로 분리했다.
+  60象 전부 讖曰 2행 + 頌曰 2행 구조이며 象마다 정확히 8줄로 기록했다.

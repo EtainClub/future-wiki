@@ -76,6 +76,16 @@ export const LENS_REGISTRY = [
     lifespan: "1503-1566",
     region: "프랑스",
   },
+  {
+    // 당대 이순풍·원천강에게 귀속되지만 현전 텍스트는 1915년 간행 금비본이다.
+    // 저자 귀속과 텍스트 성립 시점의 간극이 커 기록 신뢰도를 C로 둔다.
+    id: "tuibeitu",
+    label: "추배도",
+    short: "왕조 순환으로 읽는 상징 예언",
+    method: "dynastic-cycle",
+    recordReliability: "C",
+    region: "중국",
+  },
 ] as const satisfies readonly LensDefinition[];
 
 export type ProphetLens = (typeof LENS_REGISTRY)[number]["id"];
