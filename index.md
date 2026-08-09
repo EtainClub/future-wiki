@@ -11,3 +11,5 @@
 - [문명 전환의 공통 구조](wiki/syntheses/civilizational-transition.md) — 위기, 관계 조정, 새 질서의 형성 과정
 
 > 현재 문서는 MVP 구조 검증용 편집 메모를 사용합니다. 실제 원전 대조가 끝나기 전 직접 인용 자료로 사용하지 않습니다.
+- [물과 식량의 회복력](wiki/topics/water-food-resilience.md) — 지역 단위 물 순환과 식량 생산의 연쇄, 저장·분배 경로의 길이가 회복력에 미치는 영향을 다루는 주제
+- [신뢰망의 크기](wiki/topics/trust-network-scale.md) — 제도 붕괴 상황에서 소규모 신뢰 기반 협력망이 갖는 회복 기능을 다루는 주제
