@@ -24,3 +24,34 @@ env:
     value: "true"
     availability:
       - RUNTIME
+
+  # NEXT_PUBLIC_* 는 빌드 시 클라이언트 번들에 인라인되므로 BUILD 가용성이 필요하다.
+  # 값이 없으면 firebase/client.ts의 clientApp()이 null을 반환해 관리자 Google 로그인과
+  # App Check가 모두 동작하지 않는다. Firebase 웹 설정은 공개되도록 설계된 값이다.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyBjcx7HdrTpjDsfdRmFHqnfF_WUapBI36g"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "future-wiki.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "future-wiki"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:571369756907:web:e14c8df3ac9ec0dcb6c6ae"
+    availability:
+      - BUILD
+      - RUNTIME
+  # App Check 등록 후 reCAPTCHA Enterprise 사이트 키를 채운다. 비어 있으면
+  # getAppCheckToken()이 null을 반환하고, 프로덕션의 verifyAppCheck가 /api/ask를 401로 막는다.
+  - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+    value: ""
+    availability:
+      - BUILD
+      - RUNTIME
