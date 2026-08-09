@@ -14,7 +14,8 @@ async function walk(directory: string): Promise<string[]> {
 
 async function main() {
 const wikiFiles = (await walk(wikiRoot)).filter((file) => file.endsWith(".md"));
-const rawFiles = (await walk(rawRoot)).filter((file) => !file.endsWith("_meta.yaml"));
+// listRawFiles와 같은 필터를 쓴다. .DS_Store 같은 파일이 원문 수에 잡히면 안 된다.
+const rawFiles = (await walk(rawRoot)).filter((file) => /\.(md|txt)$/i.test(file) && !file.endsWith("_meta.yaml"));
 const index = await fs.readFile(path.join(root, "index.md"), "utf8");
 const ids = new Set<string>();
 const errors: string[] = [];

@@ -1,0 +1,23 @@
+source_id: nostradamus-propheties
+title: Nostradamus, Les Prophéties (Centuries I-X)
+copyright: public-domain
+collected_at: 2026-08-09
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  16세기 프랑스어 원문 그대로이며 번역을 포함하지 않는다. 해석은 wiki/ 페이지에서만 한다.
+lens: nostradamus
+method: astrology-symbolic
+record_reliability: A
+canonical_edition: >-
+  Anatole Le Pelletier, Les oracles de Michel de Nostredame, Tome 2 (Le Pelletier, 1867).
+  fr.wikisource 전사본에서 기계 추출. 1555년 Macé Bonhomme 초판이 아니라 1867년 교정본이므로
+  철자와 일부 이문이 초판과 다를 수 있다.
+attribution_note: >-
+  본인 생전 출판(1555 초판, 1568 완본)이라 기록 시점 추적이 가능하므로 A로 둔다.
+  다만 이 파일의 텍스트 자체는 1867년 Le Pelletier 교정본이며, 4행시의 16세기 존재는
+  확인되지만 정확한 자구는 판본에 따라 다르다.
+  Le Pelletier의 주석·이문(↑ 항목)은 19세기 편집자의 것이므로 제외했다.
+  표제 로마숫자는 위치 기준으로 정규화했고 원본 오식 3건(VI.39 "XXXVIX",
+  VI.46 "XVII", VIII.64 "XLIV")은 각 파일 헤더의 source_typo에 기록했다.
+  Centurie VI는 번호 4행시 99편이며 말미의 LEGIS CANTIO CONTRA INEPTOS CRITICOS가
+  다른 판본의 VI.100에 해당한다. 번호 합계 941편 + CANTIO 1편.
