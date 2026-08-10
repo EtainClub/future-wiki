@@ -1,5 +1,5 @@
 ---
-type: prediction
+type: synthesis
 id: climate-transition
 title: "기후와 문명의 전환"
 description: "기후 위기를 생활 방식과 문명 질서의 전환 요구로 함께 읽는 종합"

@@ -1,5 +1,5 @@
 ---
-type: prediction
+type: synthesis
 id: east-asia-transition
 title: "동아시아 질서의 전환"
 description: "충돌의 예언보다 관계 재배열과 조정 능력에 초점을 둔 지역 질서 해석"
