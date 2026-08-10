@@ -1,0 +1,21 @@
+source_id: zhouyi-shiyi
+title: 周易 — 十翼 (彖傳·象傳·文言傳)
+copyright: public-domain
+collected_at: 2026-08-10
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  經이 아니라 經에 붙은 주석이다. 원 점사로 인용하면 안 되고, 후대 해석의 사례로 다룬다.
+  經은 raw/zhouyi/ 에 있다.
+lens: iching
+method: cosmic-cycle
+record_reliability: C
+canonical_edition: >-
+  zh.wikisource 전사본. 통행본 괘 순서를 따른다. 괘별 彖傳·象傳과, 乾·坤에 붙는 文言傳을 담는다.
+  繫辭傳·說卦傳·序卦傳·雜卦傳은 괘별이 아니라 독립 편이므로 이 파일에 포함하지 않았다.
+attribution_note: >-
+  공자 저작으로 전해지나 학계는 전국~한대 성립으로 본다. 저자 귀속이 확정되지 않아
+  기록 신뢰도를 C로 둔다. 다만 추배도의 금성탄 批註나 소병가 협주와 성격이 다르다.
+  이미 일어난 특정 사건을 구절에 대응시키는 사후 지목이 아니라, 점사를 우주론·윤리로
+  재해석하는 철학적 주석에 가깝다. 그래서 method를 posthumous-attribution이 아니라
+  cosmic-cycle로 두었다.
+  이 자료를 쓸 때는 "經이 그렇게 말한다"가 아니라 "十翼이 經을 그렇게 읽는다"로 서술해야 한다.

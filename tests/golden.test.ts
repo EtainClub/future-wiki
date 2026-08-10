@@ -34,7 +34,9 @@ test("15 golden questions keep citations, assumptions, and lens boundaries", asy
       const page = byId.get(evidence.pageId);
       assert.ok(page, `${question}: cited page must exist`);
       if (lens !== "all") assert.ok(page.frontmatter.lens.includes(lens), `${question}: ${evidence.pageId} violates ${lens} lens`);
-      assert.ok(page.frontmatter.sources.every((source) => /^raw\/.+#L\d+-L\d+$/.test(source)), `${question}: source anchors required`);
+      // wikiFrontmatterSchema와 같은 형태를 요구한다. 단일 줄 앵커(#L170)도 유효하며
+      // 효사 한 줄을 가리킬 때는 범위보다 정밀하다.
+      assert.ok(page.frontmatter.sources.every((source) => /^raw\/.+#L\d+(?:-L\d+)?$/.test(source)), `${question}: source anchors required`);
     }
   }
 });
