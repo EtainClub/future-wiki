@@ -85,12 +85,66 @@ export type WikiPage = {
   frontmatter: WikiFrontmatter;
 };
 
+/**
+ * 답변이 인용한 근거 하나.
+ *
+ * kind가 "page"면 pageId는 위키 문서 id이고, "raw"면 pageId는 raw 파일 경로다.
+ * 위키가 아직 얇아 원문만 있고 문서가 없는 주제가 많으므로 두 경로를 모두 허용한다.
+ */
+export const evidenceSchema = z.object({
+  kind: z.enum(["page", "raw"]).default("page"),
+  pageId: z.string().min(1),
+  title: z.string().min(1),
+  detail: z.string().min(1),
+  /** raw/<source>/<file>#L10-L12 형태의 줄 앵커. 확인하지 못했으면 null. */
+  anchor: z.string().nullable().default(null),
+});
+export type Evidence = z.infer<typeof evidenceSchema>;
+
+/**
+ * 미래 유추의 한 단계. 원문에서 읽은 것 → 뽑아낸 구조 → 오늘에 대응시킨 추론으로 나눈다.
+ *
+ * 세 칸을 분리하는 이유는 어디까지가 기록이고 어디부터가 AI의 대입인지
+ * 독자가 문장 단위로 구분할 수 있게 하기 위함이다. projection은 언제나 추론이다.
+ */
+export const inferenceStepSchema = z.object({
+  /** 원문·과거 사례가 실제로 말한 내용. */
+  observation: z.string().min(1),
+  /** 그 사례에서 뽑아낸 반복 구조나 원리. */
+  pattern: z.string().min(1),
+  /** 그 구조를 질문의 상황에 대입했을 때 나오는 추론. */
+  projection: z.string().min(1),
+  /** 이 단계가 기대는 pageId 또는 raw 앵커 목록. */
+  basis: z.array(z.string().min(1)).default([]),
+  /** 유비가 성립하려면 참이어야 하는 조건. 깨지면 이 단계는 무너진다. */
+  leap: z.string().nullable().default(null),
+});
+export type InferenceStep = z.infer<typeof inferenceStepSchema>;
+
+/** 갈라지는 미래 하나. 확률이 아니라 상대적 무게로 읽는다. */
+export const scenarioSchema = z.object({
+  title: z.string().min(1),
+  likelihood: z.enum(["likely", "plausible", "unlikely"]),
+  /** "2030년대 초반"처럼 대략의 시간대. 특정할 수 없으면 null. */
+  horizon: z.string().nullable().default(null),
+  summary: z.string().min(1),
+  /** 이 갈래로 가고 있음을 알려주는 관찰 가능한 신호. */
+  signals: z.array(z.string().min(1)).default([]),
+});
+export type Scenario = z.infer<typeof scenarioSchema>;
+
 export const answerPayloadSchema = z.object({
   id: z.string().min(1),
   question: z.string().min(1),
   lens: lensSchema,
+  /** 한 문장 요약. 목록·기록에 쓰이므로 마크다운 없이 쓴다. */
+  headline: z.string().default(""),
+  /** 본문. 마크다운으로 렌더링된다. */
   prediction: z.string().min(1),
-  evidence: z.array(z.object({ pageId: z.string().min(1), title: z.string().min(1), detail: z.string().min(1) })).min(1),
+  evidence: z.array(evidenceSchema).min(1),
+  /** 근거에서 미래 추론으로 건너가는 사슬. 신규 필드라 과거 캐시 호환을 위해 기본값을 둔다. */
+  reasoning: z.array(inferenceStepSchema).default([]),
+  scenarios: z.array(scenarioSchema).default([]),
   assumptions: z.array(z.string().min(1)),
   confidence: z.enum(["high", "medium", "low"]),
   confidenceReason: z.string().min(1),

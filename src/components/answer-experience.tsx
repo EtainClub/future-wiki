@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, BookOpen, Check, CircleGauge, Copy, RotateCcw, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, Check, CircleGauge, Copy, GitBranch, Radar, RotateCcw, Sparkles, Waypoints } from "lucide-react";
 import { LENSES } from "@/lib/constants";
 import { getAppCheckToken } from "@/lib/firebase/client";
 import { HISTORY_KEY, LEGACY_HISTORY_KEY, historySnapshot, parseHistory, type HistoryItem } from "@/lib/history";
+import { WikiMarkdown } from "@/components/wiki-markdown";
 import type { AnswerPayload, Lens } from "@/lib/wiki/schema";
 
 
@@ -56,7 +57,7 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
         if (event === "answer") {
           const next = data as AnswerPayload;
           setAnswer(next);
-          saveHistory({ id, question, lens, createdAt: new Date().toISOString(), prediction: next.prediction });
+          saveHistory({ id, question, lens, createdAt: new Date().toISOString(), prediction: next.headline || next.prediction });
         }
         if (event === "error" && "message" in data) throw new Error(data.message);
       }
@@ -118,6 +119,7 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
   }
 
   const confidenceLabel = answer.confidence === "high" ? "높음" : answer.confidence === "medium" ? "보통" : "낮음";
+  const likelihoodLabel = { likely: "가능성 높음", plausible: "충분히 가능", unlikely: "가능성 낮음" } as const;
   return (
     <main className="answer-shell narrow-shell">
       <div className="answer-topline">
@@ -128,20 +130,70 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
 
       <section className="prediction-card">
         <div className="section-kicker"><Sparkles size={16} aria-hidden="true" /> 예견</div>
-        <p>{answer.prediction}</p>
+        {answer.headline && <p className="prediction-headline">{answer.headline}</p>}
+        <div className="prediction-body"><WikiMarkdown>{answer.prediction}</WikiMarkdown></div>
         {answer.cached && <span className="cache-badge">저장된 답변</span>}
       </section>
+
+      {answer.reasoning.length > 0 && (
+        <details className="answer-section reasoning-section" open>
+          <summary className="section-heading"><div><Waypoints size={19} aria-hidden="true" /><h2>유추의 사슬</h2></div><span>{answer.reasoning.length}단계 · 펼치기/접기</span></summary>
+          <ol className="reasoning-list">
+            {answer.reasoning.map((step, index) => (
+              <li key={`${index}-${step.projection.slice(0, 24)}`}>
+                <span className="reasoning-index">{String(index + 1).padStart(2, "0")}</span>
+                <div className="reasoning-body">
+                  <p className="reasoning-row"><b>원문</b><span>{step.observation}</span></p>
+                  <p className="reasoning-row"><b>구조</b><span>{step.pattern}</span></p>
+                  <p className="reasoning-row projected"><b>대입</b><span>{step.projection}</span></p>
+                  {step.leap && <p className="reasoning-leap">이 대응은 <em>{step.leap}</em>는 조건에서만 성립합니다.</p>}
+                  {step.basis.length > 0 && <p className="reasoning-basis">{step.basis.map((item) => <code key={item}>{item}</code>)}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
+      {answer.scenarios.length > 0 && (
+        <section className="answer-section scenario-section">
+          <div className="section-heading"><div><GitBranch size={19} aria-hidden="true" /><h2>갈라지는 미래</h2></div><span>{answer.scenarios.length}개의 갈래</span></div>
+          <div className="scenario-grid">
+            {answer.scenarios.map((scenario) => (
+              <article className={`scenario-card ${scenario.likelihood}`} key={scenario.title}>
+                <header>
+                  <h3>{scenario.title}</h3>
+                  <span className="scenario-weight">{likelihoodLabel[scenario.likelihood]}</span>
+                </header>
+                {scenario.horizon && <p className="scenario-horizon">{scenario.horizon}</p>}
+                <p className="scenario-summary">{scenario.summary}</p>
+                {scenario.signals.length > 0 && (
+                  <ul className="scenario-signals">
+                    {scenario.signals.map((signal) => <li key={signal}><Radar size={13} aria-hidden="true" />{signal}</li>)}
+                  </ul>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <details className="answer-section evidence-section" open>
         <summary className="section-heading"><div><BookOpen size={19} aria-hidden="true" /><h2>근거</h2></div><span>{answer.evidence.length}개의 문서 · 펼치기/접기</span></summary>
         <div className="evidence-list">
-          {answer.evidence.map((item, index) => (
-            <Link className="evidence-row" href={`/wiki/${item.pageId}`} key={`${item.pageId}-${index}`}>
-              <span className="evidence-index">{String(index + 1).padStart(2, "0")}</span>
-              <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-              <ArrowRight size={17} aria-hidden="true" />
-            </Link>
-          ))}
+          {answer.evidence.map((item, index) => {
+            const inner = (
+              <>
+                <span className="evidence-index">{String(index + 1).padStart(2, "0")}</span>
+                <span><strong>{item.title}</strong><small>{item.detail}</small>{item.anchor && <code className="evidence-anchor">{item.anchor}</code>}</span>
+                {item.kind === "raw" ? <span className="evidence-tag">원문</span> : <ArrowRight size={17} aria-hidden="true" />}
+              </>
+            );
+            // 원문만 있고 아직 위키 문서가 없는 근거는 링크 대신 앵커를 그대로 보여 준다.
+            return item.kind === "raw"
+              ? <div className="evidence-row" key={`${item.pageId}-${index}`}>{inner}</div>
+              : <Link className="evidence-row" href={`/wiki/${item.pageId}`} key={`${item.pageId}-${index}`}>{inner}</Link>;
+          })}
         </div>
       </details>
 

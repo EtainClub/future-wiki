@@ -6,7 +6,9 @@ import { enforceRateLimit, verifyAppCheck } from "@/lib/security";
 import { lensSchema } from "@/lib/wiki/schema";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// 유추 답변은 원전 항해·재검색·본문 확인까지 도구를 여러 번 오간다.
+// 60초에서는 검색이 한 번만 빗나가도 끊겼다. Cloud Run 기본 요청 한도(300초) 안이다.
+export const maxDuration = 120;
 
 const requestSchema = z.object({
   question: z.string().trim().min(4).max(500),

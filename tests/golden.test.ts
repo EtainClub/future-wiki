@@ -30,6 +30,17 @@ test("15 golden questions keep citations, assumptions, and lens boundaries", asy
     assert.ok(answer.evidence.length > 0, `${question}: evidence required`);
     assert.ok(answer.assumptions.length > 0, `${question}: assumptions required`);
     assert.match(answer.confidenceReason, /근거|직접|문헌|제한|단정/);
+    // 답변은 "근거 없음"으로 끝나지 않고 유추와 갈래까지 채워야 한다.
+    assert.ok(answer.headline.length > 0, `${question}: headline required`);
+    assert.ok(answer.scenarios.length >= 2, `${question}: 미래는 하나로 단정하지 않는다`);
+    assert.ok(answer.reasoning.length > 0, `${question}: 유추 단계 required`);
+    for (const step of answer.reasoning) {
+      // 원문과 대입이 한 칸에 섞이면 독자가 어디부터 추론인지 알 수 없다.
+      assert.ok(step.observation && step.pattern && step.projection, `${question}: 유추 3단이 모두 필요하다`);
+      for (const basis of step.basis) assert.ok(byId.has(basis) || basis.startsWith("raw/"), `${question}: ${basis}는 실재하는 근거가 아니다`);
+    }
+    // prediction은 마크다운으로 렌더링되므로 소제목이 있어야 화면이 벽글이 되지 않는다.
+    assert.match(answer.prediction, /^## /m, `${question}: prediction must be formatted markdown`);
     for (const evidence of answer.evidence) {
       const page = byId.get(evidence.pageId);
       assert.ok(page, `${question}: cited page must exist`);

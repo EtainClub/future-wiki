@@ -53,7 +53,8 @@ export async function writeCachedAnswer(key: string, answer: AnswerPayload): Pro
     services.db.collection("derived").doc(answer.id).set({
       question: answer.question,
       lens: answer.lens,
-      summary: answer.prediction,
+      // prediction은 마크다운 본문이라 목록에 그대로 걸면 기호가 새어 나온다.
+      summary: answer.headline || answer.prediction,
       citedPages: answer.evidence.map((item) => item.pageId),
       promoted: false,
       qaRef: key,

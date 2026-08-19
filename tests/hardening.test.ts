@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseHistory } from "../src/lib/history";
-import { listRawFiles, readRaw } from "../src/lib/wiki/local";
+import { listRawFiles, readRaw, searchRawLocal, searchTokens, sourceGuideLocal } from "../src/lib/wiki/local";
 import { LENSES } from "../src/lib/constants";
 import { LENS_REGISTRY } from "../src/lib/wiki/lenses";
 import { answerPayloadSchema, lensValues, prophecySchema, rawMetaSchema, wikiFrontmatterSchema } from "../src/lib/wiki/schema";
@@ -71,4 +71,25 @@ test("예언 검증 필드는 기록 신뢰도·해석 확신도와 독립이다
   });
   assert.equal(meta.record_reliability, "D");
   assert.equal(rawMetaSchema.safeParse({ source_id: "s", title: "t", copyright: "public-domain", record_reliability: "low" }).success, false);
+});
+
+test("원문 검색은 한자 한 글자를 낱말로 다룬다", async () => {
+  // 코퍼스가 한문이라 두 글자 미만을 버리면 師·革 같은 핵심어가 통째로 사라진다.
+  assert.deepEqual(searchTokens("師 兵 전쟁"), ["師", "兵", "전쟁"]);
+  assert.deepEqual(searchTokens("a 국제 질서"), ["국제", "질서"], "한 글자 라틴·한글은 잡음이라 버린다");
+  const hits = await searchRawLocal("師 兵 伐", 5);
+  assert.ok(hits.length > 0, "한자 검색은 원문에 걸려야 한다");
+  for (const hit of hits) {
+    assert.match(hit.anchor, /^raw\/.+#L\d+$/, "앵커는 위키 frontmatter와 같은 형식이어야 한다");
+    assert.ok(hit.line >= 1 && hit.text.length > 0);
+  }
+  // 한국어 질문으로 한문 원문을 찾을 수 없다는 사실 자체가 프롬프트 규칙의 전제다.
+  assert.equal((await searchRawLocal("미국 이란 전쟁", 5)).length, 0);
+});
+
+test("출처 안내문은 판본과 줄 색인을 담고 본문은 담지 않는다", async () => {
+  const guide = await sourceGuideLocal();
+  assert.match(guide, /raw\/zhouyi\/zhouyi-jing\.md/);
+  assert.match(guide, /49 革 → L\d+/, "괘 번호로 곧장 read_raw할 수 있어야 한다");
+  assert.ok(!guide.includes("## 편집 요약"), "본문 제목까지 긁으면 안내문이 잡음으로 부푼다");
 });
