@@ -172,3 +172,27 @@ button:active, a:active { transform: scale(0.975); transition-duration: 80ms !im
 @media (prefers-contrast: more) {
   :root { --hairline: currentColor; }.site-header, .ask-composer, .featured-card, .wiki-card, .wiki-page-shell article { border-color: currentColor; }
 }
+
+/* 앱인토스 미니앱 전용. data-toss는 빌드 시점에 <html>에 박히므로 웹에서는 아무 규칙도 켜지지 않는다. */
+.tabbar { display: none; }
+[data-toss="1"] .tabbar {
+  position: fixed; z-index: 60;
+  inset: auto 14px calc(env(safe-area-inset-bottom) + 12px);
+  display: flex; align-items: center; justify-content: space-around; gap: 4px;
+  height: 60px; padding: 0 6px;
+  border: 1px solid var(--hairline); border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+[data-toss="1"] .tabbar-link { display: flex; flex: 1; height: 48px; align-items: center; justify-content: center; flex-direction: column; gap: 2px; border-radius: 16px; color: var(--muted); font-size: 10px; font-weight: 650; transition: color 180ms, background 180ms; }
+[data-toss="1"] .tabbar-link.active { color: var(--accent); background: var(--accent-soft); }
+/* 떠 있는 탭바가 본문 끝을 가리지 않도록 아래 여백을 둔다. */
+[data-toss="1"] .app-main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+[data-toss="1"] .site-footer { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+/* 토스는 네이티브 상단 바를 직접 그리므로 웹용 sticky 헤더는 흘려보낸다. */
+[data-toss="1"] .site-header { position: static; }
+[data-toss="1"] .hero-section { padding-top: 48px; }
+@media (prefers-reduced-transparency: reduce) {
+  [data-toss="1"] .tabbar { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

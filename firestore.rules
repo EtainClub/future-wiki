@@ -18,6 +18,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    // 공유 링크가 가리키는 답변. /api/answer(Admin SDK)로만 읽고 쓴다.
+    match /answers/{id} {
+      allow read, write: if false;
+    }
     match /derived/{document} {
       allow read, write: if isAdmin();
     }

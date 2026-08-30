@@ -1,28 +1,11 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileCheck2 } from "lucide-react";
 import { WikiMarkdown } from "@/components/wiki-markdown";
-import { getRepositoryPage } from "@/lib/wiki/repository";
+import type { WikiPage } from "@/lib/wiki/schema";
 
-export const dynamic = "force-dynamic";
-
-async function findPage(slug: string[]) {
-  return getRepositoryPage(slug.join("/"));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const page = await findPage(slug);
-  return page ? { title: page.frontmatter.title, description: page.frontmatter.description } : { title: "문서를 찾을 수 없음" };
-}
-
-export default async function WikiPage({ params }: { params: Promise<{ slug: string[] }> }) {
-  const { slug } = await params;
-  const page = await findPage(slug);
-  if (!page) notFound();
+/** 위키 문서 본문. 웹은 서버 렌더링, 토스는 클라이언트 fetch로 같은 page를 넘긴다. */
+export function WikiPageView({ page, repository }: { page: WikiPage; repository: string | null }) {
   const confidence = page.frontmatter.confidence === "high" ? "높음" : page.frontmatter.confidence === "medium" ? "보통" : "낮음";
-  const repository = process.env.GITHUB_REPOSITORY;
 
   return (
     <main className="content-shell wiki-page-shell">

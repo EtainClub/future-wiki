@@ -1,16 +1,12 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { listRepositoryPages } from "@/lib/wiki/repository";
-
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = { title: "위키" };
+import { wikiHref } from "@/lib/platform";
+import type { WikiSummary } from "@/lib/wiki/client-api";
 
 const labels: Record<string, string> = { prophet: "인물", principle: "원리", prediction: "예측", entity: "대상", topic: "주제", synthesis: "종합" };
 
-export default async function WikiIndexPage() {
-  const pages = await listRepositoryPages();
+/** 위키 목록 본문. 데이터 출처만 다르고 마크업은 웹·토스가 같다. */
+export function WikiIndexView({ pages }: { pages: WikiSummary[] }) {
   const groups = Object.entries(Object.groupBy(pages, (page) => page.frontmatter.type));
   return (
     <main className="content-shell wiki-index-shell">
@@ -20,7 +16,7 @@ export default async function WikiIndexPage() {
           <section className="wiki-group" key={type}>
             <div className="wiki-group-title"><h2>{labels[type] ?? type}</h2><span>{items.length}</span></div>
             <div className="wiki-card-grid">{items.map((page) => (
-              <Link href={`/wiki/${page.frontmatter.id}`} className="wiki-card" key={page.frontmatter.id}>
+              <Link href={wikiHref(page.frontmatter.id)} className="wiki-card" key={page.frontmatter.id}>
                 <div><span>{page.frontmatter.lens.join(" · ")}</span><i className={`confidence-dot ${page.frontmatter.confidence}`} role="img" aria-label={`확신도 ${page.frontmatter.confidence}`} /></div>
                 <h3>{page.frontmatter.title}</h3><p>{page.frontmatter.description}</p><small>업데이트 {page.frontmatter.updated.toLocaleDateString("ko-KR")}</small><ArrowRight size={17} aria-hidden="true" />
               </Link>

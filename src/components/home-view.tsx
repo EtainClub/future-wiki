@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { ArrowRight, GitPullRequest, Library, ShieldCheck } from "lucide-react";
 import { AskComposer } from "@/components/ask-composer";
-import { listRepositoryPages } from "@/lib/wiki/repository";
+import { wikiHref } from "@/lib/platform";
+import type { WikiSummary } from "@/lib/wiki/client-api";
 
-export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const pages = await listRepositoryPages();
+/** 홈 화면 본문. 웹은 서버에서, 토스 번들은 클라이언트 fetch로 같은 데이터를 넘긴다. */
+export function HomeView({ pages }: { pages: WikiSummary[] }) {
   const sources = new Set(pages.flatMap((page) => page.frontmatter.sources.map((source) => source.split("#")[0])));
   const featured = pages.filter((page) => page.frontmatter.type === "principle" || page.frontmatter.type === "synthesis").slice(0, 3);
 
@@ -31,7 +30,7 @@ export default async function Home() {
         <div className="section-title-row"><div><span>살펴볼 관점</span><h2>변화를 읽는 세 가지 실마리</h2></div><Link href="/wiki">위키 전체 보기 <ArrowRight size={16} aria-hidden="true" /></Link></div>
         <div className="featured-grid">
           {featured.map((page, index) => (
-            <Link href={`/wiki/${page.frontmatter.id}`} className="featured-card" key={page.frontmatter.id}>
+            <Link href={wikiHref(page.frontmatter.id)} className="featured-card" key={page.frontmatter.id}>
               <span className="card-number">0{index + 1}</span>
               <div className={`card-symbol symbol-${index + 1}`} aria-hidden="true"><i /><i /><i /></div>
               <div><span className="card-type">{page.frontmatter.lens.join(" · ")}</span><h3>{page.frontmatter.title}</h3><p>{page.frontmatter.description}</p></div>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, ArrowRight, BookOpen, Check, CircleGauge, Copy, GitBranch, Radar, RotateCcw, Sparkles, Waypoints } from "lucide-react";
 import { LENSES } from "@/lib/constants";
-import { getAppCheckToken } from "@/lib/firebase/client";
+import { clientAttestationHeaders } from "@/lib/firebase/client";
+import { apiUrl, questionHref, wikiHref } from "@/lib/platform";
 import { HISTORY_KEY, LEGACY_HISTORY_KEY, historySnapshot, parseHistory, type HistoryItem } from "@/lib/history";
 import { WikiMarkdown } from "@/components/wiki-markdown";
 import type { AnswerPayload, Lens } from "@/lib/wiki/schema";
@@ -28,13 +29,23 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
   const [shareStatus, setShareStatus] = useState("");
 
   const ask = useCallback(async (signal: AbortSignal) => {
+    // 공유 링크를 다시 연 경우다. 저장된 답변을 그대로 읽고 끝낸다.
+    // 이 조회가 없으면 링크를 클릭할 때마다 답변을 처음부터 다시 만든다.
+    const storedResponse = await fetch(apiUrl(`/api/answer?id=${encodeURIComponent(id)}`), { signal });
+    if (storedResponse.ok) {
+      const stored = ((await storedResponse.json()) as { answer: AnswerPayload }).answer;
+      setAnswer(stored);
+      saveHistory({ id, question, lens, createdAt: new Date().toISOString(), prediction: stored.headline || stored.prediction });
+      return;
+    }
+
     const deviceId = localStorage.getItem("future-wiki-device") ?? crypto.randomUUID();
     localStorage.setItem("future-wiki-device", deviceId);
-    const appCheckToken = await getAppCheckToken();
-    const response = await fetch("/api/ask", {
+    const attestation = await clientAttestationHeaders();
+    const response = await fetch(apiUrl("/api/ask"), {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-device-id": deviceId, ...(appCheckToken ? { "x-firebase-appcheck": appCheckToken } : {}) },
-      body: JSON.stringify({ question, lens }),
+      headers: { "Content-Type": "application/json", "x-device-id": deviceId, ...attestation },
+      body: JSON.stringify({ id, question, lens }),
       signal,
     });
     if (!response.ok || !response.body) throw new Error(response.status === 429 ? "한 시간의 질문 한도에 도달했습니다. 잠시 뒤 다시 시도해 주세요." : "답변 연결을 열지 못했습니다.");
@@ -76,7 +87,7 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
 
   function askWithLens(nextLens: Lens) {
     const nextId = crypto.randomUUID();
-    router.push(`/q/${nextId}?question=${encodeURIComponent(question)}&lens=${nextLens}`);
+    router.push(questionHref(nextId, question, nextLens));
   }
 
   async function copyLink() {
@@ -192,7 +203,7 @@ export function AnswerExperience({ id, question, lens }: { id: string; question:
             // 원문만 있고 아직 위키 문서가 없는 근거는 링크 대신 앵커를 그대로 보여 준다.
             return item.kind === "raw"
               ? <div className="evidence-row" key={`${item.pageId}-${index}`}>{inner}</div>
-              : <Link className="evidence-row" href={`/wiki/${item.pageId}`} key={`${item.pageId}-${index}`}>{inner}</Link>;
+              : <Link className="evidence-row" href={wikiHref(item.pageId)} key={`${item.pageId}-${index}`}>{inner}</Link>;
           })}
         </div>
       </details>

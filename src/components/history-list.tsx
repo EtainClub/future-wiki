@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from "react";
 import { ArrowRight, Clock3, Trash2 } from "lucide-react";
 import { LENSES } from "@/lib/constants";
 import { HISTORY_KEY, LEGACY_HISTORY_KEY, historySnapshot, parseHistory } from "@/lib/history";
+import { questionHref } from "@/lib/platform";
 
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -36,7 +37,7 @@ export function HistoryList() {
       <div className="list-toolbar"><span>{items.length}개의 질문</span><div>{confirming ? <><button onClick={clear} className="danger-button">정말 지우기</button><button onClick={() => setConfirming(false)}>취소</button></> : <button onClick={() => setConfirming(true)}><Trash2 size={15} aria-hidden="true" /> 기록 지우기</button>}</div></div>
       <div className="history-list">
         {items.map((item) => (
-          <Link href={`/q/${item.id}?question=${encodeURIComponent(item.question)}&lens=${item.lens}`} className="history-row" key={item.id}>
+          <Link href={questionHref(item.id, item.question, item.lens)} className="history-row" key={item.id}>
             <div><span>{LENSES.find((lens) => lens.id === item.lens)?.label}</span><time dateTime={item.createdAt}>{new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></div>
             <h2>{item.question}</h2>
             {item.prediction && <p>{item.prediction}</p>}

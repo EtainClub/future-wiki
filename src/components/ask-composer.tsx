@@ -4,6 +4,7 @@ import { FormEvent, KeyboardEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { EXAMPLE_QUESTIONS, LENSES } from "@/lib/constants";
+import { questionHref } from "@/lib/platform";
 import type { Lens } from "@/lib/wiki/schema";
 
 export function AskComposer() {
@@ -20,7 +21,7 @@ export function AskComposer() {
       return;
     }
     const id = crypto.randomUUID();
-    router.push(`/q/${id}?question=${encodeURIComponent(value)}&lens=${lens}`);
+    router.push(questionHref(id, value, lens));
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {

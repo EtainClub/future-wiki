@@ -6,16 +6,40 @@ import { getAdminServices } from "./firebase/admin";
 
 const localRateLimits = new Map<string, { count: number; resetAt: number }>();
 
-export async function verifyAppCheck(request: Request): Promise<void> {
+/**
+ * 클라이언트가 정상 경로에서 왔음을 증명받는다.
+ *
+ * 웹은 App Check 토큰을 쓴다. 앱인토스 번들은 토스 웹뷰가 로컬 정적 번들을 실행해
+ * reCAPTCHA Enterprise에 등록된 도메인을 가질 수 없으므로, 대신 Firebase 익명 로그인
+ * ID 토큰을 받아 같은 자리에서 검증한다. 둘 다 서버가 Firebase로 직접 확인하므로
+ * 클라이언트 번들에 공유 비밀값을 심지 않는다.
+ */
+export async function verifyClientAttestation(request: Request): Promise<void> {
   if (process.env.NODE_ENV !== "production" && process.env.REQUIRE_APP_CHECK !== "true") return;
   const services = getAdminServices();
-  const token = request.headers.get("x-firebase-appcheck");
-  if (!services || !token) throw new Error("APP_CHECK_REQUIRED");
-  try {
-    await services.appCheck.verifyToken(token);
-  } catch {
-    throw new Error("APP_CHECK_REQUIRED");
+  if (!services) throw new Error("APP_CHECK_REQUIRED");
+
+  const appCheckToken = request.headers.get("x-firebase-appcheck");
+  if (appCheckToken) {
+    try {
+      await services.appCheck.verifyToken(appCheckToken);
+      return;
+    } catch {
+      // App Check가 실패하면 아래 ID 토큰 경로로 한 번 더 본다.
+    }
   }
+
+  const authorization = request.headers.get("authorization");
+  if (authorization?.startsWith("Bearer ")) {
+    try {
+      await services.auth.verifyIdToken(authorization.slice(7));
+      return;
+    } catch {
+      // 검증 실패는 아래에서 함께 거절한다.
+    }
+  }
+
+  throw new Error("APP_CHECK_REQUIRED");
 }
 
 export async function verifyAdmin(request: Request): Promise<{ uid: string }> {

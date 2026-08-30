@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TossTabBar } from "@/components/toss-tab-bar";
+import { IS_TOSS_APP } from "@/lib/platform";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,12 +31,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" data-toss={IS_TOSS_APP ? "1" : undefined}>
       <body>
         <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
         <SiteHeader />
-        <div className="page-frame" id="main-content" tabIndex={-1}>{children}</div>
+        <div className="page-frame app-main" id="main-content" tabIndex={-1}>{children}</div>
         <SiteFooter />
+        {IS_TOSS_APP && <TossTabBar />}
       </body>
     </html>
   );

@@ -1,10 +1,13 @@
 {
   "name": "future-wiki",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "dev:toss": "TOSS_BUILD=1 NEXT_PUBLIC_TOSS_APP=1 next dev",
+    "build:toss": "TOSS_BUILD=1 NEXT_PUBLIC_TOSS_APP=1 next build",
+    "build:ait": "npm run build:toss && ait build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -17,6 +20,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
+    "@apps-in-toss/web-framework": "^3.1.1",
     "@octokit/app": "^16.1.2",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.2.0",
