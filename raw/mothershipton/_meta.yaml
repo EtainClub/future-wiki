@@ -1,0 +1,25 @@
+source_id: mothershipton
+title: Mother Shipton — 예언 본문 (1816년경 챕북)
+copyright: public-domain
+collected_at: 2026-08-30
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  영어 원문 그대로이며 번역을 포함하지 않는다. 각 예언 뒤에 붙어 있던 EXPLANATION은
+  raw/mothershipton-glosses/ 로 분리했다.
+lens: mothershipton
+method: posthumous-attribution
+record_reliability: D
+canonical_edition: >-
+  en.wikisource 전사본. 《Strange and wonderful history and prophecies of Mother
+  Shipton》(c.1816) 스캔본의 Page: 네임스페이스 전사를 API로 추출했다. 18~19세기
+  인쇄체 OCR이라 긴 s(ſ)가 f로 읽힌 자리와 오식이 남아 있어 스캔본 대조가 필요하다.
+attribution_note: >-
+  어슐라 사우사일(Ursula Southeil, 통칭 Mother Shipton, 1488?-1561)에게 귀속되지만
+  본인이 남긴 기록은 없다. 현전 최고본은 1641년 팸플릿으로 사후 80년이 지난 뒤에 나타나며,
+  이 파일의 저본인 1816년경 챕북은 그보다도 175년 뒤의 판본이다. 귀속 시점과 텍스트 확인
+  시점 사이의 공백이 크므로 기록 신뢰도를 D로 둔다.
+  널리 알려진 "Carriages without horses shall go"와 1881년 세계 종말 예언은 이 판본에
+  없다. Charles Hindley가 1862년 챕북 복각에 지어 넣은 것이며 1873년 Notes and Queries에
+  본인이 자백했다. 그 기록은 raw/mothershipton-investigated/ 제5장에 인용돼 있다.
+  즉 이 인물의 자료는 위조가 문헌사적으로 입증된 드문 사례이며, 그 점 때문에
+  posthumous-attribution 원리의 근거로 쓰기에 적합하다.

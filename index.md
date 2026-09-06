@@ -1,6 +1,6 @@
 # Future Wiki Index
 
-- [탄허](wiki/prophets/tanheo.md) — 문명 전환과 동서 사상의 만남을 성찰하는 관점
+- [탄허](wiki/prophets/tanheo.md) — 화엄과 유불선 회통 위에서 문명 전환을 말한 인물이며 원문은 저작권으로 실을 수 없다
 - [변화의 원리](wiki/principles/change-principle.md) — 관계와 때의 이동을 읽는 주역의 기본 원리
 - [후천 전환](wiki/principles/later-heaven.md) — 질서와 관계의 질적 전환을 읽는 정역의 관점
 - [상징 해석의 윤리](wiki/principles/symbolic-interpretation.md) — 예언을 사건에 끼워 맞추지 않는 해석 원칙
@@ -14,5 +14,10 @@
 - [유백온](wiki/prophets/liubowen.md) — 명 태조와의 문답으로 왕조 흥망을 말했다고 전해지는 인물
 - [추배도 제3象 — 해와 달이 하늘에 있다](wiki/predictions/tuibeitu-third-xiang.md) — 상징 구절에 후대 주석이 무측천 집권을 대응시킨 사례
 - [말라키 마지막 표어 — 페트루스 로마누스](wiki/predictions/malachy-petrus-romanus.md) — 교황 이름이 붙지 않은 미해결 예언
+- [마더 쉽턴](wiki/prophets/mothershipton.md) — 잉글랜드 예언 전승에 귀속된 인물이며 후대 위조가 입증된 사례
+- [마더 쉽턴 위조 예언 — 1881년 종말](wiki/predictions/shipton-hindley-forgery.md) — 위조자가 직접 자백한, 판정 가능한 드문 사례
+- [에마누엘 스베덴보리](wiki/prophets/swedenborg.md) — 보고 들은 것이라 밝힌 18세기 환시 저작이며 저자와 시점이 모두 확인된다
+- [스베덴보리 — 태양계 행성의 거주자](wiki/predictions/swedenborg-inhabited-planets.md) — 기록 신뢰도가 높아도 내용은 틀릴 수 있음을 보여 주는 사례
+- [행성의 국면 — 재앙, 전쟁, 진화](wiki/topics/planetary-epochs.md) — 행성의 역사를 반란, 전쟁의 기원, 진화, 빛과 생명의 시대로 읽는 주제
 
 > 시드 편집 메모를 쓰는 페이지와 실제 원전을 인용하는 페이지가 함께 있습니다. 각 페이지의 sources가 가리키는 raw 디렉터리의 `_meta.yaml`에서 판본과 기록 신뢰도를 확인하십시오.

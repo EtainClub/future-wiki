@@ -1,0 +1,18 @@
+source_id: mothershipton-glosses
+title: Mother Shipton — EXPLANATION (후대 편자의 사후 지목)
+copyright: public-domain
+collected_at: 2026-08-30
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  예언이 아니라 편자의 해석이다. raw/mothershipton/ 의 예언 본문과 같은 저본에서 분리했다.
+lens: mothershipton
+method: posthumous-attribution
+record_reliability: D
+canonical_edition: >-
+  raw/mothershipton/ 과 같은 en.wikisource 전사본에서 EXPLANATION 단락만 분리했다.
+attribution_note: >-
+  헨리 8세·에드워드 6세·메리 여왕·엘리자베스 1세·드레이크의 스페인 함대 격파·1665년 역병·
+  1666년 런던 대화재처럼 이미 일어난 사건을 예언 구절에 대응시킨 것이라 전부 사후 지목이다.
+  1816년경 편자가 붙였으므로 예언 구절과 성립 시점의 층위가 다르다.
+  이 파일을 근거로 쓰는 위키 페이지는 prophecy.interpretedAfter를 true로 두어야 한다.
+  금성탄의 推背圖 批註, 소병가 협주, Giacon의 교황 지목과 같은 유형이다.

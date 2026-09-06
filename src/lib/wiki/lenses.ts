@@ -106,6 +106,40 @@ export const LENS_REGISTRY = [
     lifespan: "1094-1148",
     region: "아일랜드",
   },
+  {
+    // 어슐라 사우사일(통칭 Mother Shipton). 본인 기록은 없고 현전 최고본은 사후 80년 뒤인 1641년 팸플릿이다.
+    // 유명한 "말 없는 마차" 예언은 1862년 Charles Hindley의 위조이며 본인이 1873년에 자백했다.
+    // 위조가 문헌사적으로 입증된 드문 사례라 사후 귀속의 구조를 보여 주는 대조군으로 쓴다.
+    id: "mothershipton",
+    label: "마더 쉽턴",
+    short: "잉글랜드 예언 전승과 후대 위조가 겹친 관점",
+    method: "posthumous-attribution",
+    recordReliability: "D",
+    lifespan: "1488?-1561",
+    region: "잉글랜드",
+  },
+  {
+    // 1955년 간행된 익명 계시 문헌. 개인 저작으로 귀속되지 않아 화자를 사람 단위로 확인할 수 없다.
+    // 지구재앙·전쟁·진화와 미래 국면(빛과 생명의 시대)을 다루는 10편만 수집했다.
+    id: "urantia",
+    label: "유란시아",
+    short: "행성의 진화와 미래 국면을 다루는 계시 문헌",
+    method: "clairvoyance",
+    recordReliability: "C",
+    lifespan: "1955년 간행",
+    region: "미국",
+  },
+  {
+    // 저자와 간행 시점이 모두 분명한 드문 경우다. 기록 신뢰도는 A지만 내용은 현대 천문학과 어긋난다.
+    // 기록 신뢰도와 적중 여부가 서로 다른 축임을 보여 주는 대조군으로 쓴다.
+    id: "swedenborg",
+    label: "스베덴보리",
+    short: "보고 들은 것으로 기록한 환시의 관점",
+    method: "religious-vision",
+    recordReliability: "A",
+    lifespan: "1688-1772",
+    region: "스웨덴",
+  },
 ] as const satisfies readonly LensDefinition[];
 
 export type ProphetLens = (typeof LENS_REGISTRY)[number]["id"];

@@ -83,8 +83,13 @@ test("원문 검색은 한자 한 글자를 낱말로 다룬다", async () => {
     assert.match(hit.anchor, /^raw\/.+#L\d+$/, "앵커는 위키 frontmatter와 같은 형식이어야 한다");
     assert.ok(hit.line >= 1 && hit.text.length > 0);
   }
-  // 한국어 질문으로 한문 원문을 찾을 수 없다는 사실 자체가 프롬프트 규칙의 전제다.
-  assert.equal((await searchRawLocal("미국 이란 전쟁", 5)).length, 0);
+  // 한국어 질문으로는 한문 원전에 닿을 수 없다는 사실이 프롬프트 규칙의 전제다.
+  // 코퍼스에 한국어 서지 기록(raw/tanheo-bibliography/)이 들어온 뒤로 한국어 검색이
+  // 0건이 되지는 않으므로, 원전에 걸리지 않는다는 것만 확인한다.
+  const classical = ["raw/zhouyi/", "raw/zhouyi-shiyi/", "raw/tuibeitu/", "raw/shaobingge/", "raw/nostradamus-propheties/", "raw/malachy/"];
+  for (const hit of await searchRawLocal("미국 이란 전쟁", 5)) {
+    assert.ok(!classical.some((dir) => hit.path.startsWith(dir)), `한국어 검색이 원전 ${hit.path}에 걸렸다`);
+  }
 });
 
 test("출처 안내문은 판본과 줄 색인을 담고 본문은 담지 않는다", async () => {

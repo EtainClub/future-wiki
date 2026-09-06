@@ -94,8 +94,12 @@ export type RawHit = { path: string; line: number; text: string; anchor: string 
  */
 export function searchTokens(query: string): string[] {
   const han = query.match(/\p{Script=Han}+/gu) ?? [];
+  // 한문 원전에는 현대 한자어 복합어가 거의 없다. "貨幣"를 통째로 찾으면 0건이지만
+  // 貨와 幣로 나누면 걸린다. 복합어를 낱자로도 풀어 넣어 검색이 빈손으로 끝나지 않게 한다.
+  // 원형을 앞에 두어 점수(scanCorpus)에서 정확한 복합어가 낱자보다 앞서게 한다.
+  const chars = han.flatMap((run) => (run.length > 1 ? [...run] : []));
   const words = (query.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).filter((token) => token.length > 1 && !/\p{Script=Han}/u.test(token));
-  return [...new Set([...han, ...words])].slice(0, 16);
+  return [...new Set([...han, ...words, ...chars])].slice(0, 24);
 }
 
 /**
@@ -125,7 +129,8 @@ export function scanCorpus(corpus: Iterable<[string, string[]]>, tokens: string[
       const trimmed = text.trim();
       if (trimmed.length < 2) return;
       const haystack = trimmed.toLowerCase();
-      const score = tokens.reduce((total, token) => (haystack.includes(token) ? total + 1 : total), 0);
+      // 글자 수로 가중한다. 貨幣가 통째로 걸린 줄이 貨·幣만 흩어져 걸린 줄보다 앞선다.
+      const score = tokens.reduce((total, token) => (haystack.includes(token) ? total + token.length : total), 0);
       if (!score) return;
       const line = index + 1;
       hits.push({ score, hit: { path: file, line, text: trimmed.slice(0, 240), anchor: `${file}#L${line}` } });

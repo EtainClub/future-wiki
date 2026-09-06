@@ -1,0 +1,26 @@
+source_id: urantia
+title: The Urantia Book (1955) — 지구재앙·전쟁·진화 관련 Paper 발췌
+copyright: public-domain
+collected_at: 2026-08-30
+review_status: machine-extracted-needs-spotcheck
+notice: >-
+  영문 원문 그대로이며 번역을 포함하지 않는다. 전권 196 Paper 중 10편만 수집한 발췌다.
+lens: urantia
+method: clairvoyance
+record_reliability: C
+canonical_edition: >-
+  en.wikisource 전사본. Urantia Foundation(Chicago) 간행본의 Paper 번호와 절 번호를 따른다.
+  수록 범위는 Paper 52·53·55·57·65·67·70·71·75·81이다.
+attribution_time_note: >-
+  1955년 간행이 확인된다.
+attribution_note: >-
+  저작권은 1955년 간행 후 1983년에 갱신 등록됐으나, 2001년 배심 평결에서 그 갱신이 무효로
+  판정되어 영문판은 미국에서 퍼블릭 도메인이 되었다(Michael Foundation Inc. v. Urantia
+  Foundation, 10th Cir. 2003 확정). 미국 외 관할의 지위는 별도 확인이 필요하다.
+  텍스트는 인간 저자가 아니라 여러 초인간 화자가 제시한 것으로 서술되며 개인 저작으로
+  귀속되지 않는다. 따라서 "누가 언제 말했는가"를 사람 단위로 확인할 수 없다.
+  기록 신뢰도 C는 "1955년에 이 텍스트가 간행되었음은 확인되지만, 그 이전의 성립 경위와
+  화자의 실재는 확인할 수 없다"는 뜻이다.
+  수록 범위를 10편으로 좁힌 이유는 전권이 이 저장소 raw/ 전체의 네댓 배에 이르러,
+  그대로 넣으면 search_raw 결과를 한 자료가 지배해 다른 원전이 묻히기 때문이다.
+  지구재앙은 Paper 53·67·75, 전쟁은 70·71, 진화는 57·65·81, 미래 국면은 52·55가 다룬다.

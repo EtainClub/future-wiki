@@ -8,7 +8,11 @@ import { listRepositoryPages, readSourceGuide, readWikiIndex, readWikiPage, read
 import { LENS_REGISTRY, lensDefinition, prophetLensIds } from "../wiki/lenses";
 import { answerPayloadSchema, lensSchema, lensValues, type AnswerPayload, type Lens, type ProphetLens } from "../wiki/schema";
 
-const normalizedSchema = z.object({ normalized: z.string().min(1), entities: z.array(z.string()).default([]), topic: z.array(z.string()).default([]), timeScope: z.string().nullable().default(null), lens: lensSchema });
+/** 모델이 배열 자리에 뭘 넣든 문자열 목록으로 만든다. 정규화는 검색 힌트일 뿐 실패 지점이 되면 안 된다. */
+const looseStrings = z.unknown().optional().transform((value) => (Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()) as string[] : []));
+/** timeScope에 {start,end} 같은 객체가 오는 일이 잦다. 문자열로 눌러 담아 답변이 통째로 죽지 않게 한다. */
+const looseTimeScope = z.unknown().optional().transform((value) => (typeof value === "string" ? value : value == null ? null : JSON.stringify(value)));
+const normalizedSchema = z.object({ normalized: z.string().min(1), entities: looseStrings, topic: looseStrings, timeScope: looseTimeScope, lens: lensSchema });
 const answerSchema = answerPayloadSchema.omit({ id: true, question: true, lens: true, cached: true });
 
 export type ProgressReporter = (message: string) => void | Promise<void>;
@@ -24,21 +28,24 @@ function parseJson(text: string): unknown {
 
 export type NormalizedQuestion = z.infer<typeof normalizedSchema>;
 
+function fallbackNormalized(question: string, lens: Lens): NormalizedQuestion {
+  return { normalized: question.trim().replace(/\s+/g, " "), entities: [], topic: [], timeScope: null, lens };
+}
+
 export async function normalizeQuestion(question: string, lens: Lens): Promise<NormalizedQuestion> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return { normalized: question.trim().replace(/\s+/g, " "), entities: [], topic: [], timeScope: null, lens };
-  }
+  if (!process.env.ANTHROPIC_API_KEY) return fallbackNormalized(question, lens);
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await client.messages.create({
     model: process.env.ANTHROPIC_HAIKU_MODEL ?? "claude-haiku-4-5",
     max_tokens: 400,
     // 검색어 확장까지 여기서 끝낸다. 질문에 없는 상위 개념을 뽑아둬야
     // 얇은 코퍼스에서도 구조가 닮은 원문에 걸린다.
-    system: "질문의 의미를 보존해 검색용 구조로 정규화하세요. entities에는 질문에 나온 고유명사를, topic에는 그 질문을 한 단계 추상화한 개념어(예: 특정 전쟁 → 강대국 개입, 소모전, 철수)를 3~6개 넣으세요. UI에서 지정한 lens는 바꾸지 마세요. JSON만 반환: {\"normalized\":\"...\",\"entities\":[],\"topic\":[],\"timeScope\":null,\"lens\":\"all\"}",
+    system: "질문의 의미를 보존해 검색용 구조로 정규화하세요. entities에는 질문에 나온 고유명사를, topic에는 그 질문을 한 단계 추상화한 개념어(예: 특정 전쟁 → 강대국 개입, 소모전, 철수)를 3~6개 넣으세요. UI에서 지정한 lens는 바꾸지 마세요. timeScope는 \"2030년대\" 같은 문자열이거나 null이며 객체를 넣지 마세요. JSON만 반환: {\"normalized\":\"...\",\"entities\":[],\"topic\":[],\"timeScope\":null,\"lens\":\"all\"}",
     messages: [{ role: "user", content: `UI 렌즈: ${lens}\n질문: ${question}` }],
   });
-  const parsed = normalizedSchema.parse(parseJson(plainText(response.content)));
-  return { ...parsed, lens };
+  // 정규화가 어긋나도 답변까지 무너뜨리지 않는다. 원 질문 그대로도 탐색은 돌아간다.
+  const parsed = normalizedSchema.safeParse(parseJson(plainText(response.content)));
+  return parsed.success ? { ...parsed.data, lens } : fallbackNormalized(question, lens);
 }
 
 const keywordGroups: Array<{ pattern: RegExp; ids: string[] }> = [
@@ -113,12 +120,16 @@ async function systemRules(lens: Lens): Promise<string> {
 ## 쓸 수 있는 렌즈
 ${lensBriefing(lens)}
 렌즈 제약: ${lens}. all이 아니면 해당 lens 태그가 붙은 위키 페이지만 근거로 쓴다. raw 원문은 해당 렌즈의 출처 디렉터리를 우선 본다.
+렌즈 id와 디렉터리 이름은 다르다. list_sources 결과에 디렉터리마다 붙은 \`lens:\` 값으로 확인하고 짐작하지 마라.
+지금 기준으로 iching은 raw/zhouyi·raw/zhouyi-shiyi에, liubowen은 raw/shaobingge·raw/shaobingge-glosses에 있다.
+raw/iching·raw/tanheo·raw/jeongyeok의 seed-*.md는 원전이 아니라 편집 메모다. 분량이 적으므로 그것만으로 답을 세우지 말고, 구조는 周易 원문에서 끌어온다.
 
 ## 코퍼스의 언어 — 가장 중요한 제약
-raw 원문은 대부분 한문(周易·推背圖·燒餅歌)과 중세 프랑스어(Nostradamus)다. 한국어로 search_raw를 호출하면 거의 언제나 0건이 나온다. 0건은 "근거가 없다"는 뜻이 아니라 "검색어의 언어가 틀렸다"는 뜻이다.
+raw 원문은 대부분 한문(周易·推背圖·燒餅歌), 중세 프랑스어(Nostradamus), 라틴어(Malachy), 근세 영어(Mother Shipton)다. 한국어로 search_raw를 호출하면 원전에는 거의 걸리지 않고 한국어 서지·편집 메모만 나온다. 0건이거나 서지 기록만 나오는 것은 "근거가 없다"는 뜻이 아니라 "검색어의 언어가 틀렸다"는 뜻이다.
 - 질문의 개념을 원문의 언어로 옮겨 검색한다. 전쟁·군사 → 師, 兵, 戎, 伐, 征 / 변혁 → 革, 鼎, 變 / 대립·다툼 → 訟, 睽, 爭 / 막힘 → 否, 蹇, 困 / 물러남 → 遯, 退 / 넘침과 반전 → 亢, 極, 復.
 - 한자는 한 글자만 넣어도 검색된다. 여러 후보를 한 번에 넣어도 된다(예: "師 兵 伐").
 - Nostradamus는 원문 철자로 찾는다(guerre, sang, roy, Perse, Mesopotamie 등).
+- Mother Shipton은 근세 영어 철자로 찾는다(shall, king, blood, London 등). 긴 s가 f로 OCR된 자리가 있어 said가 faid로 적힌 곳도 있다.
 - list_sources로 괘·象의 줄 번호를 확인하면 검색 없이 read_raw로 바로 갈 수 있다.
 
 ## 작업 순서
@@ -128,13 +139,27 @@ raw 원문은 대부분 한문(周易·推背圖·燒餅歌)과 중세 프랑스
 4. 구조 추출 — 읽은 원문에서 반복되는 구조(관계의 배치, 때의 이동, 순환의 국면, 과잉과 반전)를 뽑는다. 표현이 아니라 구조를 뽑아야 한다.
 5. 유추 — 그 구조를 질문의 상황에 대입한다. 원문이 다룬 과거 사례와 질문의 대상이 어느 지점에서 대응하는지, 어긋나는지 밝힌다.
 6. 분기 — 유추의 결과를 하나로 단정하지 말고 2~3개의 갈래와 각 갈래를 가리키는 관찰 가능한 신호로 정리한다.
+7. 발화 — 뽑아낸 구조를 오늘의 언어로 이어 말한다. 이 전통이 지금 살아서 이 질문을 받았다면
+   무엇을 예견하겠는지의 어조로 쓴다. 문헌 해설이 아니라 예견이어야 한다.
+   다만 예견은 단정이 아니다. 어디까지가 원문이고 어디부터가 대입인지는 계속 갈라 둔다.
 
 ## 반드시 지킬 것
 - "근거가 없다", "관련 문서를 찾지 못했다"로 답을 끝내는 것은 실패다. 직접 언급이 없는 것이 정상이며, 그때 하는 일이 유추다.
-- 대신 구조가 가장 가까운 원문을 찾아 유추의 사슬을 세우고, 확신도를 low로 낮추고, confidenceReason에 어디가 약한 고리인지 적는다.
+- 대신 구조가 가장 가까운 원문을 찾아 유추의 사슬을 세운다.
 - 원문이 말한 것(observation)과 AI가 대입한 것(projection)을 절대 섞지 않는다. 투사는 언제나 reasoning의 projection과 assumptions에만 둔다.
 - 예언을 사실이나 보장으로 단정하지 않는다. "~할 것이다" 대신 "~로 읽힌다", "~할 여지가 크다"로 쓴다.
 - 서로 다른 전통이 비슷해 보인다는 사실을 같은 기원이나 같은 결론의 증거로 쓰지 않는다.
+
+## 확신도 매기는 법
+직접 언급 여부는 확신도의 기준이 **아니다**. 미래를 묻는 질문에 원문이 직접 답한 경우는 없으므로,
+그것을 기준으로 삼으면 모든 답이 low가 되어 확신도가 아무 정보도 주지 못한다.
+확신도는 **구조의 대응이 얼마나 단단한가**로 매긴다.
+- high — 원문(효사·象·구절)이 구조를 뚜렷하게 말하고, 그 구조가 질문 상황의 두 지점 이상에 대응하며, 어긋나는 지점까지 특정할 수 있다.
+- medium — 구조는 분명하나 대응 지점이 하나거나, 성립 조건이 여럿 붙는다.
+- low — 구조를 한 줄에서만 끌어왔거나, 대응이 비유 수준에 그치거나, 기댈 원전이 편집 메모(seed-*.md)뿐이다.
+
+confidenceReason은 면책 문구가 아니다. **무엇에 기대어 그렇게 읽는지를 먼저 쓰고**, 그다음 약한 고리를 한 마디로 짚는다.
+"직접적인 근거가 없다", "원문이 이 주제를 다루지 않는다"는 모든 답에 해당하는 말이므로 쓰지 않는다.
 
 ## 출력 형식
 최종 응답은 다른 문장 없이 JSON 하나만 반환한다.
@@ -143,7 +168,7 @@ raw 원문은 대부분 한문(周易·推背圖·燒餅歌)과 중세 프랑스
   "prediction": "마크다운 본문. 아래 형식 규칙을 따른다.",
   "evidence": [{"kind":"page"|"raw","pageId":"위키 id 또는 raw 파일 경로","title":"표시할 제목","detail":"이 근거가 무엇을 말하는지 한 문장","anchor":"raw/...#L10-L12 또는 null"}],
   "reasoning": [{"observation":"원문이 실제로 말한 것","pattern":"거기서 뽑은 구조","projection":"질문의 상황에 대입한 추론","basis":["pageId 또는 raw 앵커"],"leap":"이 대응이 성립하려면 참이어야 하는 조건"}],
-  "scenarios": [{"title":"갈래 이름","likelihood":"likely"|"plausible"|"unlikely","horizon":"대략의 시간대 또는 null","summary":"두세 문장","signals":["관찰 가능한 신호"]}],
+  "scenarios": [{"title":"갈래 이름","likelihood":"likely"|"plausible"|"unlikely","horizon":"대략의 시간대. 특정할 수 없을 때만 null","summary":"두세 문장","signals":["관찰 가능한 신호"]}],
   "assumptions": ["원문에 없는데 AI가 보탠 전제"],
   "confidence": "high"|"medium"|"low",
   "confidenceReason": "왜 그 확신도인지. 약한 고리를 지목한다.",
@@ -152,12 +177,15 @@ raw 원문은 대부분 한문(周易·推背圖·燒餅歌)과 중세 프랑스
 
 prediction 마크다운 규칙:
 - 250~600자. \`##\` 소제목 2~3개로 나눈다. 첫 소제목은 질문에 대한 직답이다.
+- 문헌 소개로 시작하지 않는다. 질문이 물은 대상이 앞으로 어떻게 될지를 먼저 말하고, 원문은 그 판단을 떠받치는 자리에 둔다.
+- 두루뭉술하게 끝내지 않는다. 무엇이 언제쯤 어떤 모습으로 나타날지, 무엇을 보면 그 갈래로 가고 있는지까지 적는다.
 - 문단은 2~4문장으로 짧게 끊는다. 한 문단이 화면을 넘기지 않게 한다.
 - 핵심 개념은 \`**굵게**\`, 나열은 \`-\` 목록으로 쓴다. 표는 비교가 필요할 때만 쓴다.
 - 표제 아래 빈 줄을 반드시 넣는다. 제목에 번호를 붙이지 않는다.
 - 원문(한문·고어)을 그대로 인용할 때는 반드시 "원문"(한국어 번역) 형식으로 번역을 바로 붙인다. prediction 전체에서 원문 그대로의 인용은 2회를 넘기지 않는다 — 그 이상의 축자 인용과 구절별 해설은 reasoning의 observation에 두고, prediction은 그 결론만 평이한 한국어로 풀어 쓴다.
 
 evidence는 실제로 read_page 또는 read_raw로 읽은 것만 최소 1건 넣는다. reasoning은 최소 1단계, scenarios는 최소 2갈래를 채운다.
+scenarios의 signals는 갈래마다 최소 1개를 채우고, horizon은 원문의 순환 구조에서 시간대를 끌어낼 수 있으면 반드시 적는다.
 confidence는 "high" | "medium" | "low" 중 하나여야 한다. 다른 값이나 서술형 표현은 금지한다.
 suggestedLenses는 렌즈 id 배열이며 렌즈 이름 외의 문구를 넣지 마라.`;
 }
